@@ -7,7 +7,7 @@ library(vars)
 library(lmtest)
 library(urca)
 library(ardl)
-library(gvlma)
+## library(gvlma)
 
 # Data --------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ ecmeq <- ts.intersect(eqlist, difeqlist, lageqlist,ld1eqlist,ld2eqlist)
 # SPLIT SAMPLE ACCORDING TO FIN°
 ecmeqante <- window(ecmeq,start=1951,end=1984)
 ecmeqpost <- window(ecmeq,start=1984,end=2016)
-ecmeqbtwn <- window(ecmeq,start=1984,end=2007)
+ecmeqbtwn <- window(ecmeq,start=1984,end=2008)
 
 
 # Coint -------------------------------------------------------------------
@@ -481,10 +481,21 @@ VARselect((ecmeq[,6]),lag.max = 8, type = "both",
 # diff(capu)t + diff(profit)t + diff(fininv)t
 # min(SC=7.398314) : 2 lags for  diff(inv)
 
+### ARDL(1,1,0,1) in unrestricted form (equation #4 from Dave Gile's Blog)
+      ## with lag(0) for exogen variables
+            model4.1 <- lm((ecmeqbtwn[,6]) ~ ecmeqbtwn[,11] + ecmeqbtwn[,12]+ ecmeqbtwn[,13] +ecmeqbtwn[,14] +
+                                                    ecmeqbtwn[,7] + ecmeqbtwn[,8] + ecmeqbtwn[,9] +
+                                       ecmeqbtwn[,16] + ecmeqbtwn[,17]+ ecmeqbtwn[,19])
+      ## withOUT lag(0) for exogen variables
+            model4.2 <- lm((ecmeqbtwn[,6]) ~ ecmeqbtwn[,11] + ecmeqbtwn[,12]+ ecmeqbtwn[,13] +ecmeqbtwn[,14] +
+                                       ecmeqbtwn[,16] + ecmeqbtwn[,17]+ ecmeqbtwn[,19])
 
-model2 <- lm((ecmeq[,6]) ~ ecmeq[,16] + ecmeq[,21]+
-               ecmeq[,7] + ecmeq[,8]+
-               ecmeq[,11] + ecmeq[,12]+ ecmeq[,13] + ecmeq[,14])
+      ## test both models' residual autocorr :
+            bgtest(model4.1)
+            bgtest(model4.2)
+            
+            
+            
 # diff(capu)t + diff(profit)t
 # min(SC=7.380591) : 2 lags for  diff(inv)
 
@@ -628,6 +639,9 @@ lvldata <- window(cdat, start = c(1987,1), end=c(2016,4), frequency=4)
 #1984 - 2008
 lvldata <- window(cdat, start = c(1984,1), end=c(2008,1), frequency=4)
 
+# Write lvldata in CSV 
+write.csv(lvldata, file = "MyData.csv")
+
 # LagSel 1 ----------------------------------------------------------------
 
 # 1st. Alternative : i~u.r.fi
@@ -691,20 +705,33 @@ c5select5 <- ardl::auto.ardl(inv~u+r+fi+d, data=lvldata, ymax=4,
 
 # i.i.d Ardl --------------------------------------------------------------
 
+retards<-c(1,0,0,0)
+retards<-c(1,1,0,0) #
+retards<-c(1,1,1,0)
 
+retards<-c(1,1,0,1) ###
+
+retards<-c(1,1,0,2)
+retards<-c(1,1,2,0)
 retards<-c(2,0,0,0)
-retards<-c(1,1,0,1)
+retards<-c(2,1,0,0)
+retards<-c(2,1,1,0)
+retards<-c(2,1,0,1)
+retards<-c(1,1,1,1)
+retards<-c(1,1,1,2)
+retards<-c(2,1,1,1)
+
 
 cas<- 1
 
 mod <- ardl( inv~u+r+fi, data=lvldata, ylag=retards[1], xlag=retards[2:4], case=cas, quiet=FALSE )
 summary(mod)
 
-Box.test(mod$residuals,lag = 10, type="Ljung-Box",fitdf=1)
+Box.test(mod$residuals,lag = 8, type="Ljung-Box",fitdf=sum(retards))
 
 qqnorm(mod$residuals)
 qqline(mod$residuals)  
-bgtest(mod)
+bgtest(mod$residuals)
 
 boxplot(mod$residuals)
 hist(mod$residuals)
