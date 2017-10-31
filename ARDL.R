@@ -735,7 +735,7 @@ bgtest(mod$residuals)
 
 boxplot(mod$residuals)
 hist(mod$residuals)
-shapiro.test(mod$residuals) #Royston (1995) to be adequate for p.value < 0.1.
+shapiro.test(ArdlRatioAlt1.0$residuals) #Royston (1995) to be adequate for p.value < 0.1.
 
 ## Estimation ##
 
@@ -760,7 +760,7 @@ ArdlRatioAlt1<-ardl::ardl(inv ~ -1+u+r+fi, data=lvldata, ylag=1,
                           xlag=c(1,0,0), case = 1)
 ### test for alternative specification ARDL(1,1,0,1) :
 ArdlRatioAlt1.0<-ardl::ardl(inv ~ -1+u+r+fi, data=lvldata, ylag=1,
-                            xlag=c(1,0,1), case = 1)
+                            xlag=c(1,0,1), case = 3)
 #IN FINE: when restricting the period for 1984-2008
 # (to account for identified structural breaks)
 # ARDL (Inv,u,r,FinIn) prooves LRR at 5%
@@ -792,10 +792,10 @@ cmacrodlog<-ardl::ardl(inv~u+r+fi+d, data=lvldata, ylag=1,
                        xlag=c(1,0,0,1), case=1)
 #1984-2007 - COINT 10%
 cmacroelog<-ardl::ardl(inv~u+r+fi+d, data=lvldata, ylag=1,
-                       xlag=c(1,0,0,0), case=1)
+                       xlag=c(1,0,0,0), case=3)
 
 # WALD Test ---------------------------------------------------------------
 
 ######## WALD TEST OK -->  long run relationship btw i~u.r.fi+DEBT ###
 ardl::bounds.test(ArdlRatioAlt1.0)
-ardl::coint(cmacroelog)
+ardl::coint(ArdlRatioAlt1.0)
