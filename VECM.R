@@ -1,4 +1,4 @@
-setwd("C:/Users/Ferdi/Documents/R/WD")
+setwd("C:/Users/Ferdi/Documents/R")
 library(tseries)
 # Read data
 RealGrowth <- read.csv("Z1_RGDP_3Dec_GDPC96.csv", head = TRUE, sep=",")
@@ -14,6 +14,10 @@ vniveau2<-ts.intersect(gts,dts2,lag(gts,k=-1),lag(dts2,lag=-1))
 vlog2<-log(vniveau2)
 vdiff_n2<-diff(vniveau2)
 vdiff_l2<-diff(vlog2)
+
+vdiff_2_n<-diff(vniveau2,k=2)
+gd2<-vdiff_2_n[,1]
+ts.plot(gd2)
 
 # plot level & Diff-lev
 par(mfrow=c(2,2))
@@ -68,24 +72,39 @@ pp.test(dnwld, type = "Z(t_alpha)")
   #...(1996), which utilizes GLS detrending" p.167
   # see Elliot & al. (1996, p.825) for Critical values (-3.46 at 1% here)
 library(urca)
-ur.ers(gl, model="const")
-ur.ers(dnwl)
-  # Diff
-ur.ers(gld,model="trend")
-ur.ers(dnwld,model="trend")
-#also CONFIRM ADF & PP results (only at 2.5% for Debt)
-
-#2- KPSS
-  # Ho: stationnarity
+  # Level
+    ur.ers(g, model="const")
+    ur.ers(dnw)
+  # Level-Diff
+    ur.ers(gd,model="trend")
+    ur.ers(dnwd,model="trend")  
   # LOG
-kpss.test(gl,null = "Trend")
-kpss.test(dnwl,null = "Trend") #both reject Ho of stat.
-  # Diff ; no-trend
-kpss.test(gld)
-kpss.test(dnwld) # Debt not diff-stat. --> try including a trend:
-  # Diff Trend
-kpss.test(gld,null = "Trend")
-kpss.test(dnwld,null = "Trend")
+    ur.ers(gl, model="const")
+    ur.ers(dnwl)
+  # Log-Diff
+    ur.ers(gld,model="trend")
+    ur.ers(dnwld,model="trend")
+#also CONFIRM ADF & PP results (only at 2.5% for LOG-Debt)
+
+#2- KPSS  # Ho: stationnarity
+  #Level
+    kpss.test(g,null = "Trend")
+    kpss.test(dnw,null = "Trend") #both reject Ho of stat.
+  #Diff no-trend
+    kpss.test(gd) # Growth not diff-stat. --> try including a trend:
+    kpss.test(dnwd)
+  #Diff + Trend
+    kpss.test(gd,null = "Trend")
+    kpss.test(dnwd,null = "Trend")
+  #LOG
+    kpss.test(gl,null = "Trend")
+    kpss.test(dnwl,null = "Trend") #both reject Ho of stat.
+  #Log-Diff ; no-trend
+    kpss.test(gld)
+    kpss.test(dnwld) # Debt not diff-stat. --> try including a trend:
+  #Log-Diff Trend
+    kpss.test(gld,null = "Trend")
+    kpss.test(dnwld,null = "Trend")
 #also CONFIRM ADF, PP & ERS results.
 
 
@@ -106,36 +125,32 @@ kpss.test(dnwld,null = "Trend")
 
 # Elliot &. also have cointegr?
 
-# Phillips Ouliaris test
-#   Ho: no cointegrat?
-
-# LOG
-po.test(vlog2[,1:2], demean = T, lshort = T)      # No COINT
-po.test(vlog2[,2:1], demean = T, lshort = T) # neither the other way round
-# LEVELS
-po.test(vniveau2[,1:2], demean = T, lshort = T)      # No COINT
-po.test(vniveau2[,2:1], demean = T, lshort = T) # neither the other way round
-
-
-
-## RESULTS: NO Cointegration
-
+# Phillips Ouliaris test  # Ho: no cointegrat?
+  # LEVELS
+    po.test(vniveau2[,1:2], demean = T, lshort = T)      # No COINT
+    po.test(vniveau2[,2:1], demean = T, lshort = T) # neither the other way round
+    ## RESULTS: NO Cointegration
+  # LOG
+    po.test(vlog2[,1:2], demean = T, lshort = T)      # No COINT
+    po.test(vlog2[,2:1], demean = T, lshort = T) # neither the other way round
+    ## RESULTS: NO Cointegration
 
 # Johansen test
-#   Ho: no cointegrat? (r=0 against r>0 , then r<=1 against r>1 etc..)
-  # A rank r>0 implies a cointegrating relationship
-    # between two or possibly more time series
-jojo<-ca.jo(vlog2[,(1:2)])#,ecdet="const",type="trace")
-summary(jojo)
-# NO COINT in log ##
-
-jojolevel<-ca.jo(vniveau2[,(1:2)],ecdet="const") #,type="trace")
-summary(jojolevel)
-  # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
+  # Ho: no cointegrat? (r=0 against r>0 , then r<=1 against r>1 etc..)
+        # A rank r>0 implies a cointegrating relationship
+        # between two or possibly more time series
+  #LOG
+    jojo<-ca.jo(vlog2[,(1:2)])#,ecdet="const",type="trace")
+    summary(jojo)
+    # NO COINT in log ##
+  #LEVELS
+    jojolevel<-ca.jo(vniveau2[,(1:2)],ecdet="const") #,type="trace")
+    summary(jojolevel)
+    # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
         #  for r<=1: tstat < crit.val. --> cointegration btw (x+1) variables
-jojolevTrace<-ca.jo(vniveau2[,(1:2)],ecdet="const",type="trace")
-summary(jojolevTrace)
-## RESULTS: possible Cointegration in Levels
+    jojolevTrace<-ca.jo(vniveau2[,(1:2)],ecdet="const",type="trace")
+    summary(jojolevTrace)
+    ## RESULTS: possible Cointegration in Levels
 #
 
 # test for "wrongly accept COINT" for struct. Break (Pfaff ?8.2)
