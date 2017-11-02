@@ -127,13 +127,13 @@ library(urca)
 
 # Phillips Ouliaris test  # Ho: no cointegrat?
   # LEVELS
-    po.test(vniveau2[,1:2], demean = T, lshort = T)      # No COINT
-    po.test(vniveau2[,2:1], demean = T, lshort = T) # neither the other way round
-    ## RESULTS: NO Cointegration
+    po.test(vniveau2[,1:2], demean = T, lshort = T)      #  COINT
+    po.test(vniveau2[,2:1], demean = T, lshort = T) # idem the other way round
+    ## RESULTS:  Cointegration
   # LOG
-    po.test(vlog2[,1:2], demean = T, lshort = T)      # No COINT
-    po.test(vlog2[,2:1], demean = T, lshort = T) # neither the other way round
-    ## RESULTS: NO Cointegration
+    po.test(vlog2[,1:2], demean = T, lshort = T)      #  COINT
+    po.test(vlog2[,2:1], demean = T, lshort = T) # idem the other way round
+    ## RESULTS:  Cointegration
 
 # Johansen test
   # Ho: no cointegrat? (r=0 against r>0 , then r<=1 against r>1 etc..)
@@ -153,21 +153,29 @@ library(urca)
     ## RESULTS: possible Cointegration in Levels
 #
 
-# test for "wrongly accept COINT" for struct. Break (Pfaff ?8.2)
-jojoStruct <- cajolst(vniveau2[,(1:2)])
-slot(jojoStruct, "bp")
-slot(jojoStruct, "x")
-slot(jojoStruct, "x")[126] # corrsponding to 1983
-## RESULTS: NO Cointegration once break accounted for (1983,1)
-#         i.e there maybe coint just becausz of struct shift
+# test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
+  jojoStruct <- cajolst(vniveau2[,(1:2)])
+  summary(jojoStruct)
+  slot(jojoStruct, "bp")
+  slot(jojoStruct, "x")
+  slot(jojoStruct, "x")[126] # corrsponding to 1983
+  ## RESULTS: NO Cointegration once break accounted for (1983,1)
+  #         i.e there maybe coint just becausz of struct shift
 
 # Thus, test COINT from 1983 to 2016
-vniveau2postBpt <- window(vniveau2,start=1983,end=2016)
-jojopostBpt <- ca.jo(vniveau2postBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
-summary(jojopostBpt)
-## RESULTS: COINT at 1% from 1983 on !!!
-#           i.e one may estimate a VECM for G&D
-#           goto SVAR section
+  #RESAMPLE
+    vniveau2postBpt <- window(vniveau2,start=1983,end=2016)
+  #Phillips Ouliaris test  # Ho: no cointegrat?
+    po.test(vniveau2postBpt[,1:2], demean = T, lshort = T)      #  COINT
+    po.test(vniveau2postBpt[,2:1], demean = T, lshort = T) # idem the other way round
+    ## RESULTS:  Cointegration
+    
+  #Johansen
+    jojopostBpt <- ca.jo(vniveau2postBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+    summary(jojopostBpt)
+    ## RESULTS: COINT at 1% from 1983 on !!!
+    #           i.e one may estimate a VECM for G&D
+    #           goto SVAR section
 
 
 
