@@ -6,38 +6,41 @@ DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.c
                      head = TRUE, sep=",")
 
 # Make Time Series of Debt & Gdp objects
-gts <- ts(RealGrowth$GDPC96, start = c(1947,1),frequency = 4)
-dts2 <- ts(DebtToNw$NCBCMDPNWMV, start = c(1951,4),frequency = 4)
+gdpts <- ts(RealGrowth$GDPC96, start = c(1947,1),frequency = 4)
+dts <- ts(DebtToNw$NCBCMDPNWMV, start = c(1951,4),frequency = 4)
+
+# Switch to LOG(GDP)
+gts<-log(gdpts)
 
 # Bind the series into a list
-vniveau2<-ts.intersect(gts,dts2,lag(gts,k=-1),lag(dts2,lag=-1))
-vlog2<-log(vniveau2)
-vdiff_n2<-diff(vniveau2)
-vdiff_l2<-diff(vlog2)
+vniveau<-ts.intersect(gts,dts,lag(gts,k=-1),lag(dts,lag=-1))
+vlog<-log(vniveau)
+vdiff_niveau<-diff(vniveau)
+vdiff_log<-diff(vlog)
 
-vdiff_2_n<-diff(vniveau2,k=2)
-gd2<-vdiff_2_n[,1]
+vdiff_2_niveau<-diff(vniveau,k=2)
+gd2<-vdiff_2_niveau[,1]
 ts.plot(gd2)
 
 # plot level & Diff-lev
 par(mfrow=c(2,2))
-ts.plot(g<-vniveau2[,1], ylab="RGDP (level)")
-ts.plot(dnw<-vniveau2[,2], ylab="Debt/net worth")
+ts.plot(g<-vniveau[,1], ylab="RGDP (log)")
+ts.plot(dnw<-vniveau[,2], ylab="Debt/net worth")
 # plot of diff_Debt_level is informative of
 # the transformation in debt dynamics occuring from mid 1980's
-ts.plot(gd<-vdiff_n2[,1], ylab="RGDP (diff.)")
-ts.plot(dnwd<-vdiff_n2[,2], ylab="Debt/net worth (diff.)")
+ts.plot(gd<-vdiff_niveau[,1], ylab="RGDP (diff.)")
+ts.plot(dnwd<-vdiff_niveau[,2], ylab="Debt/net worth (diff.)")
 
 # plot log & Diff-log
-ts.plot(gl<-vlog2[,1])
-ts.plot(dnwl<-vlog2[,2])
-ts.plot(gld<-vdiff_l2[,1])
-ts.plot(dnwld<-vdiff_l2[,2])
+ts.plot(gl<-vlog[,1])
+ts.plot(dnwl<-vlog[,2])
+ts.plot(gld<-vdiff_log[,1])
+ts.plot(dnwld<-vdiff_log[,2])
 par(mfrow=c(1,1))
 
 
-#glag<-vlog2[,3]
-#dnwlag<-vlog2[,4]
+#glag<-vlog[,3]
+#dnwlag<-vlog[,4]
 
 # like Kleiber p.165: 2 ways to adress Stationarity :
   #1- ADF:  Ho=non-stat.  H1= diff-stat.
@@ -127,12 +130,12 @@ library(urca)
 
 # Phillips Ouliaris test  # Ho: no cointegrat?
   # LEVELS
-    po.test(vniveau2[,1:2], demean = T, lshort = T)      #  COINT
-    po.test(vniveau2[,2:1], demean = T, lshort = T) # idem the other way round
+    po.test(vniveau[,1:2], demean = T, lshort = T)      #  COINT
+    po.test(vniveau[,2:1], demean = T, lshort = T) # idem the other way round
     ## RESULTS:  Cointegration
   # LOG
-    po.test(vlog2[,1:2], demean = T, lshort = T)      #  COINT
-    po.test(vlog2[,2:1], demean = T, lshort = T) # idem the other way round
+    po.test(vlog[,1:2], demean = T, lshort = T)      #  COINT
+    po.test(vlog[,2:1], demean = T, lshort = T) # idem the other way round
     ## RESULTS:  Cointegration
 
 # Johansen test
@@ -140,70 +143,122 @@ library(urca)
         # A rank r>0 implies a cointegrating relationship
         # between two or possibly more time series
   #LOG
-    jojo<-ca.jo(vlog2[,(1:2)])#,ecdet="const",type="trace")
+    jojo<-ca.jo(vlog[,(1:2)])#,ecdet="const",type="trace")
     summary(jojo)
     # NO COINT in log ##
   #LEVELS
-    jojolevel<-ca.jo(vniveau2[,(1:2)],ecdet="const") #,type="trace")
+    jojolevel<-ca.jo(vniveau[,(1:2)],ecdet="const") #,type="trace")
     summary(jojolevel)
     # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
         #  for r<=1: tstat < crit.val. --> cointegration btw (x+1) variables
-    jojolevTrace<-ca.jo(vniveau2[,(1:2)],ecdet="const",type="trace")
+    jojolevTrace<-ca.jo(vniveau[,(1:2)],ecdet="const",type="trace")
     summary(jojolevTrace)
     ## RESULTS: possible Cointegration in Levels
 #
 
 # test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
-  jojoStruct <- cajolst(vniveau2[,(1:2)])
-  summary(jojoStruct)
-  slot(jojoStruct, "bp")
-  slot(jojoStruct, "x")
-  slot(jojoStruct, "x")[126] # corrsponding to 1983
-  ## RESULTS: NO Cointegration once break accounted for (1983,1)
-  #         i.e there maybe coint just becausz of struct shift
-
-# Thus, test COINT from 1983 to 2016
-  #RESAMPLE
-    vniveau2postBpt <- window(vniveau2,start=1983,end=2016)
-  #Phillips Ouliaris test  # Ho: no cointegrat?
-    po.test(vniveau2postBpt[,1:2], demean = T, lshort = T)      #  COINT
-    po.test(vniveau2postBpt[,2:1], demean = T, lshort = T) # idem the other way round
-    ## RESULTS:  Cointegration
+  #LEVEL
+    jojoStruct <- cajolst(vniveau[,(1:2)])
+    summary(jojoStruct)
+    slot(jojoStruct, "bp")
+    slot(jojoStruct, "x")
+    slot(jojoStruct, "x")[126] # corrsponding to 1983
+    ## RESULTS: NO Cointegration once break accounted for (1983,1)
+    #         i.e there maybe coint just becausz of struct shift
+  
+  #LOG
+    jojoLOGStruct <- cajolst(vlog[,(1:2)])
+    summary(jojoLOGStruct)
+    slot(jojoLOGStruct, "bp")
+    ## RESULTS: NO Cointegration once break accounted for
     
-  #Johansen
-    jojopostBpt <- ca.jo(vniveau2postBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
-    summary(jojopostBpt)
-    ## RESULTS: COINT at 1% from 1983 on !!!
-    #           i.e one may estimate a VECM for G&D
-    #           goto SVAR section
+#DIVIDE TESTS FOR FINANCIALIZATION ACCOUNT
+  #RESAMPLE
+    #LEVEL
+      vniveaupostBpt <- window(vniveau,start=1983,end=2016)
+      vniveauante <- window(vniveau,start=1951,end=1985)
+      vniveaubtwn <- window(vniveau,start=1985,end=2007)
+    #LOG
+      vlogpostBpt <- window(vlog,start=1983,end=2016)
+      vlogante <- window(vlog,start=1951,end=1983)
+      vlogBtw <- window(vlog,start=1983,end=2007)
+    
+  #POST 
+    #Phillips Ouliaris test  # Ho: no cointegrat?
+    #LEVEL
+      #P.O
+      po.test(vniveaupostBpt[,1:2], demean = T, lshort = T)      #  NO COINT
+      po.test(vniveaupostBpt[,2:1], demean = T, lshort = T) # idem the other way round
+        ## RESULTS:  NO Cointegration in LEVELS
+      #JO
+      jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      summary(jojopostBpt)
+        ## RESULTS: COINT at 1% from 1983 on !!!
+        #           i.e one may estimate a VECM for G&D
+        #           goto SVAR section
+    #LOG
+      po.test(vlogpostBpt[,1:2], demean = T, lshort = T) 
+      po.test(vlogpostBpt[,2:1], demean = T, lshort = T) # idem the other way round
+      #JO
+      jojoLOGpostBpt <- ca.jo(vlogpostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      summary(jojoLOGpostBpt)
+      ## RESULTS: COINT
+  
+
+  ## ANTE FIN°
+    #LEVEL
+      #P.O
+      po.test(vniveauante[,(1:2)], demean = T, lshort = T)      # No COINT
+      po.test(vniveauante[,2:1], demean = T, lshort = T) # neither the other way round
+      #Johansen
+      jojoAnteTrace<-ca.jo(vniveauante[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      summary(jojoAnteTrace)
+      ###  5% COINT 
+      jojoAnteMax<-ca.jo(vniveau[,(1:2)],ecdet="const") #,type="trace")
+      summary(jojoAnteMax)
+      ###  1% COINT 
+      
+    #LOG
+      po.test(vlogante[,1:2], demean = T, lshort = T) 
+      po.test(vlogante[,2:1], demean = T, lshort = T) 
+      #Johansen
+      jojoLOGante<-ca.jo(vlogante[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      summary(jojoLOGante)
 
 
-
-## DIVIDE THE SAMPLE FOR FINANCIALIZATION ACCOUNT
-vniveau2ante <- window(vniveau2,start=1951,end=1985)
-vniveau2btwn <- window(vniveau2,start=1985,end=2007)
-
-## ANTE FIN°
-po.test(vniveau2ante[,(1:2)], demean = T, lshort = T)      # No COINT
-po.test(vniveau2ante[,2:1], demean = T, lshort = T) # neither the other way round
-
-jojoante<-ca.jo(vniveau2ante[,(1:2)],ecdet="const",type="trace") #,type="trace")
-summary(jojoante)
-### umbiguous COINT (G.E nocoint but JO coint)
-
+  ## BETWEEN FIN°
+    #LEVEL
+      #P.O
+      po.test(vniveaubtwn[,(1:2)], demean = T, lshort = T)      # No COINT
+      po.test(vniveaubtwn[,2:1], demean = T, lshort = T) # neither the other way round
+      #Johansen
+      jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      summary(jojoBTW)
+      ###  COINT 
+    #LOG
+      po.test(vlogBtw[,1:2], demean = T, lshort = T) 
+      po.test(vlogBtw[,2:1], demean = T, lshort = T) 
+      #Johansen
+      jojoLOBTW<-ca.jo(vlogante[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      summary(jojoLOBTW)
+      
+      
+      
+      
+      
 ## POST FIN°  (including 2007 crisis aftermath)
-po.test(vniveau2post[,(1:2)], demean = T, lshort = T)      # No COINT
-po.test(vniveau2post[,2:1], demean = T, lshort = T) # neither the other way round
+po.test(vniveaupost[,(1:2)], demean = T, lshort = T)      # No COINT
+po.test(vniveaupost[,2:1], demean = T, lshort = T) # neither the other way round
 # NO COINT
-jojopost<-ca.jo(vniveau2post[,(1:2)],ecdet="const") #,type="trace")
+jojopost<-ca.jo(vniveaupost[,(1:2)],ecdet="const") #,type="trace")
 summary(jojopost)
 ### ambiguous COINT
 
 ## Post Fin°  (excluding post 2007 crisis)
-po.test(vniveau2btwn[,(1:2)], demean = T)      # No COINT
-po.test(vniveau2btwn[,2:1], demean = T) # neither the other way round
+po.test(vniveaubtwn[,(1:2)], demean = T)      # No COINT
+po.test(vniveaubtwn[,2:1], demean = T) # neither the other way round
 # NO COINT
-jojobtwn<-ca.jo(vniveau2btwn[,(1:2)],ecdet="const") #,type="trace")
+jojobtwn<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const") #,type="trace")
 summary(jojobtwn)
 # COINTEGRATION for Johanson
 
@@ -495,7 +550,7 @@ roots(GvarD.new)
           # NOT the other way round
           # CONTRADICT Lavoie & Secca results
 #1983-->2016
-  datapostBP <- data.frame(gpostBP=vniveau2postBpt[,1], dpostBP=vniveau2postBpt[,2])
+  datapostBP <- data.frame(gpostBP=vniveaupostBpt[,1], dpostBP=vniveaupostBpt[,2])
   VARselect(datapostBP, lag.max = 6, type = "both")
     # SC --> 2 lags
   varpostBP <- VAR(datapostBP, p = 2, type = "both")
@@ -509,8 +564,8 @@ roots(GvarD.new)
           # for period: 1962 - 1998
           # NOTE : I SHOULD replicate this on CANADA
           # butall i habe is USA data
-gLS<-window(vniveau2[,1],start=1962,end=1998)
-dLS<-window(vniveau2[,2],start=1962,end=1998)
+gLS<-window(vniveau[,1],start=1962,end=1998)
+dLS<-window(vniveau[,2],start=1962,end=1998)
 myvarLS<-cbind(gLS,dLS)
 VARselect(myvarLS, lag.max = 6, type = "both")
 varLS <- VAR(myvarLS, p = 2, type = "both")
