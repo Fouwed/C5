@@ -14,9 +14,9 @@ gts<-log(gdpts)
 
 # Bind the series into a list
 vniveau<-ts.intersect(gts,dts,lag(gts,k=-1),lag(dts,lag=-1))
-vlog<-log(vniveau)
+####     vlog<-log(vniveau)
 vdiff_niveau<-diff(vniveau)
-vdiff_log<-diff(vlog)
+####     vdiff_log<-diff(vlog)
 
 vdiff_2_niveau<-diff(vniveau,k=2)
 gd2<-vdiff_2_niveau[,1]
@@ -32,11 +32,11 @@ ts.plot(gd<-vdiff_niveau[,1], ylab="RGDP (diff.)")
 ts.plot(dnwd<-vdiff_niveau[,2], ylab="Debt/net worth (diff.)")
 
 # plot log & Diff-log
-ts.plot(gl<-vlog[,1])
-ts.plot(dnwl<-vlog[,2])
-ts.plot(gld<-vdiff_log[,1])
-ts.plot(dnwld<-vdiff_log[,2])
-par(mfrow=c(1,1))
+####     ts.plot(gl<-vlog[,1])
+####     ts.plot(dnwl<-vlog[,2])
+####     ts.plot(gld<-vdiff_log[,1])
+####     ts.plot(dnwld<-vdiff_log[,2])
+####     par(mfrow=c(1,1))
 
 
 #glag<-vlog[,3]
@@ -55,38 +55,44 @@ adf.test((dnwd))
 # dnw: non-stat. but is diff-stat.
 
 # LOGs
-adf.test(gl)
-adf.test(gld)
-adf.test(dnwl)
-adf.test(dnwld)
-# g: non-stat. but is diff-stat.
-# dnw: non-stat. but is diff-stat
+####     adf.test(gl)
+####     adf.test(gld)
+####     adf.test(dnwl)
+####     adf.test(dnwld)
+####     # g: non-stat. but is diff-stat.
+####     # dnw: non-stat. but is diff-stat
 
 # Phillips-Perron test for stationarity
-  # Ho: non-stat.
-pp.test(gl, type = "Z(t_alpha)")
-pp.test(dnwl, type = "Z(t_alpha)")
-  # Diff
-pp.test(gld, type = "Z(t_alpha)")
-pp.test(dnwld, type = "Z(t_alpha)")
-# CONFIRM ADF results of non-stat. in log-variables
+# Ho: non-stat.
+  #LEVEL
+    pp.test(g, type = "Z(t_alpha)")
+    pp.test(dnw, type = "Z(t_alpha)")
+  #Diff
+    pp.test(gd, type = "Z(t_alpha)")
+    pp.test(dnwd, type = "Z(t_alpha)")
+  #RESULTS CONFIRM ADF results of 
+     # non-stat. in LEVEL but Stat. in DIFF.
 
-# alternative test is "Elliott, Rothenberg and Stock...
+library(urca)
+
+# Alternative test is "Elliott, Rothenberg and Stock...
   #...(1996), which utilizes GLS detrending" p.167
   # see Elliot & al. (1996, p.825) for Critical values (-3.46 at 1% here)
-library(urca)
-  # Level
+  # Ho=non-stat.
+  #Level
     ur.ers(g, model="const")
     ur.ers(dnw)
-  # Level-Diff
+  #Diff
     ur.ers(gd,model="trend")
     ur.ers(dnwd,model="trend")  
-  # LOG
-    ur.ers(gl, model="const")
-    ur.ers(dnwl)
-  # Log-Diff
-    ur.ers(gld,model="trend")
-    ur.ers(dnwld,model="trend")
+    
+####       # LOG
+####         ur.ers(gl, model="const")
+####         ur.ers(dnwl)
+####       # Log-Diff
+####         ur.ers(gld,model="trend")
+####         ur.ers(dnwld,model="trend")
+    
 #also CONFIRM ADF & PP results (only at 2.5% for LOG-Debt)
 
 #2- KPSS  # Ho: stationnarity
@@ -99,16 +105,18 @@ library(urca)
   #Diff + Trend
     kpss.test(gd,null = "Trend")
     kpss.test(dnwd,null = "Trend")
-  #LOG
-    kpss.test(gl,null = "Trend")
-    kpss.test(dnwl,null = "Trend") #both reject Ho of stat.
-  #Log-Diff ; no-trend
-    kpss.test(gld)
-    kpss.test(dnwld) # Debt not diff-stat. --> try including a trend:
-  #Log-Diff Trend
-    kpss.test(gld,null = "Trend")
-    kpss.test(dnwld,null = "Trend")
-#also CONFIRM ADF, PP & ERS results.
+    #also CONFIRM ADF, PP & ERS results.
+    
+####       #LOG
+####         kpss.test(gl,null = "Trend")
+####         kpss.test(dnwl,null = "Trend") #both reject Ho of stat.
+####       #Log-Diff ; no-trend
+####         kpss.test(gld)
+####        kpss.test(dnwld) # Debt not diff-stat. --> try including a trend:
+####      #Log-Diff Trend
+####         kpss.test(gld,null = "Trend")
+####         kpss.test(dnwld,null = "Trend")
+
 
 
 ###  NOTE that ADF,PP,ERS are UnitRoot test
@@ -130,35 +138,38 @@ library(urca)
 
 # Phillips Ouliaris test  # Ho: no cointegrat?
   # LEVELS
-    po.test(vniveau[,1:2], demean = T, lshort = T)      #  COINT
-    po.test(vniveau[,2:1], demean = T, lshort = T) # idem the other way round
-    ## RESULTS:  Cointegration
-  # LOG
-    po.test(vlog[,1:2], demean = T, lshort = T)      #  COINT
-    po.test(vlog[,2:1], demean = T, lshort = T) # idem the other way round
-    ## RESULTS:  Cointegration
+    po.test(cbind(g,dnw), demean = T, lshort = T)      #  NO COINT
+    po.test(cbind(dnw,g), demean = T, lshort = T) # idem the other way round
+   ### RESULTS:  NO Cointegration
+    
+####         # LOG
+####           po.test(vlog[,1:2], demean = T, lshort = T)      #  COINT
+####           po.test(vlog[,2:1], demean = T, lshort = T) # idem the other way round
+####          ## RESULTS:  Cointegration
 
 # Johansen test
   # Ho: no cointegrat? (r=0 against r>0 , then r<=1 against r>1 etc..)
         # A rank r>0 implies a cointegrating relationship
         # between two or possibly more time series
-  #LOG
-    jojo<-ca.jo(vlog[,(1:2)])#,ecdet="const",type="trace")
-    summary(jojo)
-    # NO COINT in log ##
-  #LEVELS
-    jojolevel<-ca.jo(vniveau[,(1:2)],ecdet="const") #,type="trace")
+####            #LOG
+####              jojo<-ca.jo(vlog[,(1:2)])#,ecdet="const",type="trace")
+####              summary(jojo)
+####              # NO COINT in log ##
+    
+  #MAX
+    jojolevel<-ca.jo(cbind(g,dnw),ecdet="const") #,type="trace")
     summary(jojolevel)
-    # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
+   # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
         #  for r<=1: tstat < crit.val. --> cointegration btw (x+1) variables
-    jojolevTrace<-ca.jo(vniveau[,(1:2)],ecdet="const",type="trace")
+  #TRACE
+     jojolevTrace<-ca.jo(cbind(g,dnw),ecdet="const",type="trace")
     summary(jojolevTrace)
-    ## RESULTS: possible Cointegration in Levels
+   ## RESULTS: Cointegration
 #
 
 # test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
   #LEVEL
-    jojoStruct <- cajolst(vniveau[,(1:2)])
+    jojoStruct <- cajolst(cbind(g,dnw))
     summary(jojoStruct)
     slot(jojoStruct, "bp")
     slot(jojoStruct, "x")
@@ -166,22 +177,22 @@ library(urca)
     ## RESULTS: NO Cointegration once break accounted for (1983,1)
     #         i.e there maybe coint just becausz of struct shift
   
-  #LOG
-    jojoLOGStruct <- cajolst(vlog[,(1:2)])
-    summary(jojoLOGStruct)
-    slot(jojoLOGStruct, "bp")
-    ## RESULTS: NO Cointegration once break accounted for
+    ####              #LOG
+    ####                jojoLOGStruct <- cajolst(vlog[,(1:2)])
+    ####                summary(jojoLOGStruct)
+    ####                slot(jojoLOGStruct, "bp")
+    ####                ## RESULTS: NO Cointegration once break accounted for
     
-#DIVIDE TESTS FOR FINANCIALIZATION ACCOUNT
+#TEST 3 separate periods FOR FINANCIALIZATION ACCOUNT
   #RESAMPLE
     #LEVEL
       vniveaupostBpt <- window(vniveau,start=1983,end=2016)
       vniveauante <- window(vniveau,start=1951,end=1985)
       vniveaubtwn <- window(vniveau,start=1985,end=2007)
-    #LOG
-      vlogpostBpt <- window(vlog,start=1983,end=2016)
-      vlogante <- window(vlog,start=1951,end=1983)
-      vlogBtw <- window(vlog,start=1983,end=2007)
+      ####                #LOG
+      ####                  vlogpostBpt <- window(vlog,start=1983,end=2016)
+      ####                  vlogante <- window(vlog,start=1951,end=1983)
+      ####                  vlogBtw <- window(vlog,start=1983,end=2007)
     
   #POST 
     #Phillips Ouliaris test  # Ho: no cointegrat?
@@ -196,13 +207,14 @@ library(urca)
         ## RESULTS: COINT at 1% from 1983 on !!!
         #           i.e one may estimate a VECM for G&D
         #           goto SVAR section
-    #LOG
-      po.test(vlogpostBpt[,1:2], demean = T, lshort = T) 
-      po.test(vlogpostBpt[,2:1], demean = T, lshort = T) # idem the other way round
-      #JO
-      jojoLOGpostBpt <- ca.jo(vlogpostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
-      summary(jojoLOGpostBpt)
-      ## RESULTS: COINT
+      
+      ####                #LOG
+      ####                  po.test(vlogpostBpt[,1:2], demean = T, lshort = T) 
+      ####                 po.test(vlogpostBpt[,2:1], demean = T, lshort = T) # idem the other way round
+      ####                 #JO
+      ####                 jojoLOGpostBpt <- ca.jo(vlogpostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      ####                 summary(jojoLOGpostBpt)
+      ####                 ## RESULTS: COINT
   
 
   ## ANTE FIN°
@@ -218,100 +230,80 @@ library(urca)
       summary(jojoAnteMax)
       ###  1% COINT 
       
-    #LOG
-      po.test(vlogante[,1:2], demean = T, lshort = T) 
-      po.test(vlogante[,2:1], demean = T, lshort = T) 
-      #Johansen
-      jojoLOGante<-ca.jo(vlogante[,(1:2)],ecdet="const",type="trace") #,type="trace")
-      summary(jojoLOGante)
+      ####                #LOG
+      ####                  po.test(vlogante[,1:2], demean = T, lshort = T) 
+      ####                  po.test(vlogante[,2:1], demean = T, lshort = T) 
+      ####                 #Johansen
+      ####                 jojoLOGante<-ca.jo(vlogante[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      ####                 summary(jojoLOGante)
 
 
   ## BETWEEN FIN°
     #LEVEL
       #P.O
-      po.test(vniveaubtwn[,(1:2)], demean = T, lshort = T)      # No COINT
-      po.test(vniveaubtwn[,2:1], demean = T, lshort = T) # neither the other way round
-      #Johansen
-      jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const",type="trace") #,type="trace")
-      summary(jojoBTW)
-      ###  COINT 
-    #LOG
-      po.test(vlogBtw[,1:2], demean = T, lshort = T) 
-      po.test(vlogBtw[,2:1], demean = T, lshort = T) 
-      #Johansen
-      jojoLOBTW<-ca.jo(vlogante[,(1:2)],ecdet="const",type="trace") #,type="trace")
-      summary(jojoLOBTW)
+        po.test(vniveaubtwn[,(1:2)], demean = T, lshort = T)      # No COINT
+        po.test(vniveaubtwn[,2:1], demean = T, lshort = T) # neither the other way round
+        #Johansen
+        jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const",type="trace") #,type="trace")
+        summary(jojoBTW)
+       ###  COINT 
       
-      
-      
-      
-      
-## POST FIN°  (including 2007 crisis aftermath)
-po.test(vniveaupost[,(1:2)], demean = T, lshort = T)      # No COINT
-po.test(vniveaupost[,2:1], demean = T, lshort = T) # neither the other way round
-# NO COINT
-jojopost<-ca.jo(vniveaupost[,(1:2)],ecdet="const") #,type="trace")
-summary(jojopost)
-### ambiguous COINT
-
-## Post Fin°  (excluding post 2007 crisis)
-po.test(vniveaubtwn[,(1:2)], demean = T)      # No COINT
-po.test(vniveaubtwn[,2:1], demean = T) # neither the other way round
-# NO COINT
-jojobtwn<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const") #,type="trace")
-summary(jojobtwn)
-# COINTEGRATION for Johanson
-
-
-
 #### Structural break tests ##########
 
 
 
 library(strucchange)
 
-# StrBrk_1 : EFP ----------------------------------------------------------
+#1- StrBrk_1 : EFP ----------------------------------------------------------
 # EFP = empirical fluct? process
 # Ho: no struct. break (Kleiber p.171)
 
+        
 ####### GROWTH ########
 
+  #### type= Rec. MOsum
+    # ALL DATA RANGE
+    efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
+      # 0.053 --> 3 years
+    plot(efpMo_rgdp)
+    
+  ### type= Rec. CUsum
+    # & narrowing data range from 1973 on...
+    post73<-window(g,start=1974)
+    efpCum_g73 <- efp(post73 ~ 1)
+    plot(efpCum_g73)
+  
+  ###  BREAK in end 1980's   ###
+  #        for g               #
 
+
+# OLD - G -----------------------------------------------------------------
+
+    
+    
   # set list for Alternative regression fits
                    #1 #2  #3            #4
 vbn21<-ts.intersect(g,gd,lag(g,k=-1),lag(gd,k=-1))
 vbn22<-ts.intersect(gl,gld,lag(gl,k=-1),lag(gld,k=-1))
                     #1  #2   #3            #4
 
-  ### DIFF.
-efp_gd <- efp(gd ~ 1)   #vbn21[,2]
-plot(efp_gd)
+### REcursive CUMSUM
+  efpCum_g <- efp(g ~ 1)     #vbn21[,1]
+  plot(efpCum_g)  # break in 1973 oil crisis
+  
+  
+    efpMo_g73 <- efp(post73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
+    # 0.087 --> 3 years
+    plot(efpMo_g73)
+  
+    
+### DIFF. RGDP
+  efp_gd <- efp(diff(gdpts) ~ 1)   #vbn21[,2]
+  plot(efp_gd)
   ###  BREAK in early 1990's ###
   #        for g.diff          #
 
 
-  ### REcursive CUMSUM
-efpCum_g <- efp(g ~ 1)     #vbn21[,1]
-plot(efpCum_g)  # break in 1973 oil crisis
-# narrowing data range from 1973 on...
-post73<-window(g,start=1974)
-efpCum_g73 <- efp(post73 ~ 1)
-plot(efpCum_g73)
-
-###  BREAK in end 1980's   ###
-#        for g               #
-
-
-
-#### BUT with type= Rec. MOSUM
-######  got break in 1980's
-#####     for ALL DATA RANGE  ######
-efpMo_g <- efp(g ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
-            # 0.053 --> 3 years
-plot(efpMo_g)
-efpMo_g73 <- efp(post73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
-# 0.087 --> 3 years
-plot(efpMo_g73)
 
 
   # Iteration on h parameter (window of the mobile average)
@@ -326,83 +318,73 @@ plot(efpMo_g73)
 Mpost73<-window(vbn21,start=1974)
 sc_efp1_g <- efp(Mpost73[,1] ~ 1+Mpost73[,3], type = "OLS-MOSUM")
 plot(sc_efp1_g)
-  ### RAS ###
+### RAS ###
 
 sc_efp2_g <- efp(vbn21[,1] ~ 1+vbn21[,3], type = "OLS-MOSUM")
 plot(sc_efp2_g)
-### Break in mid 90's #####
+### RAS ###
 
 
+### REcursive CUMSUM
+          ######    efpCum_d <- efp(dnw ~ 1)     #vbn21[,1]
+          ######    plot(efpCum_d)  # break in 1973 oil crisis
+          ######    # R.A.S
+          ######    # narrowing data range from 1973 on...
+          ######    dpost73<-window(dnw,start=1976)
+          ######    efpCum_d73 <- efp(dpost73 ~ 1)
+          ######    plot(efpCum_d73)
+          ######    efpMo_d73 <- efp(dpost73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
+          ######    # 0.087 --> 3 years
+          ######    plot(efpMo_d73)
 
 
 ####  DEBT    #####
 
-### REcursive CUMSUM
-efpCum_d <- efp(dnwl ~ 1)     #vbn21[,1]
-plot(efpCum_d)  # break in 1973 oil crisis
-# R.A.S
-
-# narrowing data range from 1973 on...
-dpost73<-window(dnwl,start=1974)
-efpCum_d73 <- efp(dpost73 ~ 1)
-plot(efpCum_d73)
-
-###  BREAK in mid 1980's   ###
-#     then 90's for dnw      #
+  # type= Rec. MOSUM
+    efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
+    # 0.053 --> 3 years
+    plot(efpMo_d)
+  ###  BREAK in 1973 then   ###
+  #    mid 1980's for dnw     #
 
 
-# Idem with type= Rec. MOSUM
-efpMo_d <- efp(dnwl ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
-# 0.053 --> 3 years
-plot(efpMo_d)
-efpMo_d73 <- efp(dpost73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
-# 0.087 --> 3 years
-plot(efpMo_d73)
+      
 
-###  BREAK from mid 1980's   ###
-#                           ##
 
 
 # struct. break when out of conf. interv.
   # struc. br. if p.value<conf.int.  i.e reject Ho
-sctest(efpCum_g)
+sctest(efpMo_rgdp)
 sctest(efpCum_g73)
-sctest(efpMo_g)
-sctest(efpMo_g73)
-sctest(sc_efp2_g)
+sctest(efpMo_d)
+
+####         sctest(efpMo_g73)
+####         sctest(sc_efp2_g)
 
 
 # struct. breaks found for diff(realGDP)
+plot(efpMo_rgdp)
 plot(efpCum_g73)
-plot(efpMo_g)
-plot(efpCum_g73)
-plot(sc_efp2_g)
+plot(efpMo_d)
 
 plot(efpCum_g73, alpha = 0.05, alt.boundary = TRUE)
 
 
+#2- StrBrk_2 : Fstat --------------------------------------------------------
 
+#### GROWTH
 
-# StrBrk_2 : Fstat --------------------------------------------------------
-
-#2- Fstat = possible breaks ##
-
-
-#### levels  ####
-
-  #### GROWTH
-
-fs.growth <- Fstats(gl ~ 1+time(g))
+fs.growth <- Fstats(g ~ 1)
 plot(fs.growth)
 breakpoints(fs.growth)
 plot(g)
 lines(breakpoints(fs.growth))
-###    Break: 1992.2     #####
-bp.growth <- breakpoints(gl ~ 1+time(g),breaks = 1)
+###    Break: 1983.3     #####
+bp.growth <- breakpoints(g ~ 1,breaks = 1)
 summary(bp.growth)
-fmg0 <- lm(gl ~ 1+time(g))
-fmgf <- lm(gl ~ breakfactor(bp.growth))#,breaks = 1))
-plot(gl)
+fmg0 <- lm(g ~ 1)
+fmgf <- lm(g ~ breakfactor(bp.growth))#,breaks = 1))
+plot(g)
 lines(ts(fitted(fmg0), start=c(1951)), col = 3)
 lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
 lines(bp.growth)
@@ -419,8 +401,6 @@ lines(ts(fitted(fmg0), start=c(1951)), col = 3)
 lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
 lines(bp.growth2007)
 
-###    Break: 1987.1    #####
-
 
 
 ###### DEBT Level #######
@@ -429,12 +409,10 @@ plot(fs.debt2)
 plot(dnw)
 breakpoints(fs.debt2)
 lines(breakpoints(fs.debt2))
-
-###    Break: 1985.2     #####
+####### Break 1985.3
 
 bp.debt2 <- breakpoints(dnw ~ 1,breaks = 1)
 summary(bp.debt2)
-
 fmdnw0 <- lm(dnw ~ 1)
 fmdnwf <- lm(dnw ~ breakfactor(bp.debt2))#,breaks = 1))
 plot(dnw)
@@ -444,15 +422,13 @@ lines(bp.debt2)
 
 
 
-####  LOG  ####
+####  OLD Growth Log  ####
 
 Lfs.growth <- Fstats(gl ~ 1)
 plot(Lfs.growth)
 breakpoints(Lfs.growth)
 plot(gl)
 lines(breakpoints(Lfs.growth))
-
-###    Break: 1983.3     #####
 
 Lbp.growth <- breakpoints(gl ~ 1,breaks = 1)
 summary(Lbp.growth)
@@ -468,14 +444,12 @@ bp.growthl2007 <- breakpoints(gl2007 ~ 1,breaks = 1)
 summary(bp.growthl2007)
 
 
-  ###### DEBT log #######
+####  OLD  DEBT  Log #######
 Lfs.debt2 <- Fstats(dnwl ~ 1)
 plot(Lfs.debt2)
 plot(dnwl)
 breakpoints(Lfs.debt2)
 lines(breakpoints(Lfs.debt2))
-
-###    Break: 1985.2     #####
 
 Lbp.debt2 <- breakpoints(dnwl ~ 1,breaks = 2)
 summary(Lbp.debt2)
