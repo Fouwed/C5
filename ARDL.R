@@ -26,11 +26,14 @@ uraw1 <- read.csv("Capacity1_Utilization_Manuf.csv", head = TRUE, sep=",")
 uraw2 <- read.csv("Capacity2_Utilization_Manuf_exc_computer.csv", head = TRUE, sep=",")
 uraw3 <- read.csv("Capacity3_UtilizationManufNAICS.csv", head = TRUE, sep=",")
 
-# All FinAsset (including UNIDENTIFIED)
-fininvraw <- read.csv("FinInv.csv", skip = 1,head = TRUE, sep=",")
-finInvIndeed <- read.csv("PURGED_FININV.csv", skip = 2,head = TRUE, sep=",")
-
-
+#All FinAsset (including UNIDENTIFIED)
+  fininvraw <- read.csv("FinInv.csv", skip = 1,head = TRUE, sep=",")
+#ONLY Identified Financial assets
+  finInvIndeed <- read.csv("PURGED_FININV.csv", skip = 2,head = TRUE, sep=",")
+#UnIdentified Financial assets
+  intanginv <- read.csv("IntangibleInv.csv", skip = 1,head = TRUE, sep=",")
+  
+  
 DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
                      head = TRUE, sep=",")
 DebtToEq <- read.csv("Z1_NFCBusiness_CreditMarketDebtAsPercentageOfMarketValueOfCorpEquities.csv",
@@ -51,12 +54,17 @@ capu1 <- ts(uraw1$CAPUTLB00004SQ, start = c(1948,1),end = c(2016,4),frequency = 
 capu2 <- ts(uraw2$CAPUTLX4HTK2SQ, start = c(1967,1),frequency = 4)
 capu3 <- ts(uraw3$CUMFN, start = c(1972,1),frequency = 4)
 
-# 2 alternative FinInv :
-#1st. is Total Fin Asset from Z1
-#FinInv <- ts(fininvraw$fininv, start = c(1951,4),end = c(2016,4),frequency = 4)
-#2nd. is financialy "pure" Fin Assets
-FinInv <- ts(finInvIndeed$FININDEED, start = c(1951,4),
-             end = c(2015,1),frequency = 4)
+#2 alternative FinInv :
+  #1st. is Total Fin Asset from Z1
+    TotFinInv <- ts(fininvraw$fininv, start = c(1951,4),end = c(2016,4),frequency = 4)
+  #2nd. is financialy "pure" Fin Assets
+    FinInv <- ts(finInvIndeed$FININDEED, start = c(1951,4),
+               end = c(2015,1),frequency = 4)
+  
+#INTANIBLE INVESTMENT SERIES
+  IntInv <- ts(intanginv$intinv, start = c(1951,4),
+               end = c(2015,1),frequency = 4)
+  
 FinInvHistRatio <- ts(fininvraw$hfininvratio, start = c(1951,4),end = c(2016,4),frequency = 4)
 FinInvRatio <- ts(fininvraw$fininvratio, start = c(1951,4),frequency = 4)
 AssetTot <- ts(fininvraw$totinv, start = c(1951,4),frequency = 4)
@@ -75,6 +83,8 @@ ts.plot(inv2)
 ts.plot(inv3)
 ts.plot(inv4)
 ts.plot(inv5)
+lines(TotFinInv)
+lines(FinInv)
 ts.plot(inv6)
 par(mfrow=c(3,1))
 ts.plot(capu1)
@@ -121,29 +131,35 @@ adf.test(diff(dbteq))
 # all I(1)
 
 #Create LIST of 5 variables (i-u-r-Fi-D)
-#1st. ALTERNATIVE --->  (i,r,Fi) = nominal level
-#eqlist<- ts.intersect(inv5,capu1,profit1,FinInv,dbtnw)
-#After Peter's comment, I change 3 variables (Inv, Profit, FinInv)
-#2nd ALTERNATIVE --->  (i,r,Fi) = LOGARITHM
-#eqlist<- ts.intersect(log(inv5),capu1,log(profit1),
-#log(FinInv),dbtnw)
-#3rd ALTERNATIVE --->  (i,r,Fi) = ratio of Total NFC Assets
-eqlist<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
-                      (FinInv/AssetTot),dbtnw)
-# ++ ALTERNATIVE --->  FinInvRatio
-#eqlist<- ts.intersect(inv5,capu1,profit1,FinInvRatio,dbtnw)
-# ++ ALTERNATIVE --->  FinInvHistRatio
-#eqlist<- ts.intersect(inv5,capu1,profit1,FinInvHistRatio,dbtnw)
+  #1st. ALTERNATIVE --->  (i,r,Fi) = NOMINAL level
+    #eqlist<- ts.intersect(inv5,capu1,profit1,FinInv,dbtnw)
+    #After Peter's comment, I change 3 variables (Inv, Profit, FinInv)
+  #2nd ALTERNATIVE --->  (i,r,Fi) = LOGARITHM
+    #eqlist<- ts.intersect(log(inv5),capu1,log(profit1),
+    #log(FinInv),dbtnw)
+  #3rd ALTERNATIVE --->  (i,r,Fi) = RATIO of Total NFC Assets
+    eqlist<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
+                          (FinInv/AssetTot),dbtnw)
+  #4th ALTERNATIVE --->  (i,r,Fi,Ii) = RATIO of Total NFC Assets
+    data_list<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
+                        (FinInv/AssetTot),(IntInv/AssetTot),dbtnw)
+  # ++ ALTERNATIVE --->  FinInvRatio
+  #eqlist<- ts.intersect(inv5,capu1,profit1,FinInvRatio,dbtnw)
+  # ++ ALTERNATIVE --->  FinInvHistRatio
+  #eqlist<- ts.intersect(inv5,capu1,profit1,FinInvHistRatio,dbtnw)
 
 #Create LIST of 5X5 variables (i-u-r-Fi-D)x(level-diff-lagLevel-2xlagDiff)
-difeqlist <- diff(eqlist)
-lageqlist <- lag(eqlist, k=-1)
-ld1eqlist <- lag(difeqlist, k=-1)
-ld2eqlist <- lag(difeqlist, k=-2)
-#ld3eqlist <- lag(difeqlist, k=-3)
-#ld4eqlist <- lag(difeqlist, k=-4)
-ecmeq <- ts.intersect(eqlist, difeqlist, lageqlist,ld1eqlist,ld2eqlist)
+  difeqlist <- diff(eqlist)
+  lageqlist <- lag(eqlist, k=-1)
+  ld1eqlist <- lag(difeqlist, k=-1)
+  ld2eqlist <- lag(difeqlist, k=-2)
+  #ld3eqlist <- lag(difeqlist, k=-3)
+  #ld4eqlist <- lag(difeqlist, k=-4)
+  ecmeq <- ts.intersect(eqlist, difeqlist, lageqlist,ld1eqlist,ld2eqlist)
 
+#Create a simpler list of i - u - r - Fi - Ii - D  (no Lag no Diff)
+  
+  
 # SPLIT SAMPLE ACCORDING TO FIN°
 ecmeqante <- window(ecmeq,start=1951,end=1984)
 ecmeqpost <- window(ecmeq,start=1984,end=2016)
@@ -625,6 +641,10 @@ Summary(model1)
 #Create dataframe for compatibility with ARDL PACKAGE Funct?
 c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
                     r=(ecmeq[,3]), fi = (ecmeq[,4]), d = ecmeq[,5])
+ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
+                    r=(data_list[,3]), fi = (data_list[,4]),
+                    ii = data_list[,5], d = data_list[,5])
+
 cdat<-ts(c5dat,start=c(1952,3), end=c(2016,4), frequency=4)
 
 # WATCHOUT : use alternatively lvldate according to sample PERIODs
