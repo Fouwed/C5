@@ -12,19 +12,19 @@ library(ardl)
 # Data --------------------------------------------------------------------
 
 # Read data
-invraw1 <- read.csv("INV1_Accumulation_ofProducedAssetsGrossFixed.csv",head = TRUE, sep=",")
-invraw2 <- read.csv("INV2_FixedPrivateInvestment.csv",head = TRUE, sep=",")
-invraw3 <- read.csv("INV3_RealPrivateFixedInvestment.csv", head = TRUE, sep=",")
-invraw4 <- read.csv("INV4_GrossPrivateDomesticInvestment.csv",head = TRUE, sep=",")
-invraw5 <- read.csv("INV5_RealGrossPrivateDomesticInvestment.csv",head = TRUE, sep=",")
-invraw6 <- read.csv("INV6_Nominal Investment__GPDIplusPCE.csv", head = TRUE, sep=",")
-
-profraw1 <- read.csv("ProfitsAfterTax.csv", head = TRUE, sep=",")
-profraw2 <- read.csv("ProfitsBeforeTax.csv", head = TRUE, sep=",")
-
-uraw1 <- read.csv("Capacity1_Utilization_Manuf.csv", head = TRUE, sep=",")
-uraw2 <- read.csv("Capacity2_Utilization_Manuf_exc_computer.csv", head = TRUE, sep=",")
-uraw3 <- read.csv("Capacity3_UtilizationManufNAICS.csv", head = TRUE, sep=",")
+  invraw1 <- read.csv("INV1_Accumulation_ofProducedAssetsGrossFixed.csv",head = TRUE, sep=",")
+  invraw2 <- read.csv("INV2_FixedPrivateInvestment.csv",head = TRUE, sep=",")
+  invraw3 <- read.csv("INV3_RealPrivateFixedInvestment.csv", head = TRUE, sep=",")
+  invraw4 <- read.csv("INV4_GrossPrivateDomesticInvestment.csv",head = TRUE, sep=",")
+  invraw5 <- read.csv("INV5_RealGrossPrivateDomesticInvestment.csv",head = TRUE, sep=",")
+  invraw6 <- read.csv("INV6_Nominal Investment__GPDIplusPCE.csv", head = TRUE, sep=",")
+  
+  profraw1 <- read.csv("ProfitsAfterTax.csv", head = TRUE, sep=",")
+  profraw2 <- read.csv("ProfitsBeforeTax.csv", head = TRUE, sep=",")
+  
+  uraw1 <- read.csv("Capacity1_Utilization_Manuf.csv", head = TRUE, sep=",")
+  uraw2 <- read.csv("Capacity2_Utilization_Manuf_exc_computer.csv", head = TRUE, sep=",")
+  uraw3 <- read.csv("Capacity3_UtilizationManufNAICS.csv", head = TRUE, sep=",")
 
 #All FinAsset (including UNIDENTIFIED)
   fininvraw <- read.csv("FinInv.csv", skip = 1,head = TRUE, sep=",")
@@ -34,25 +34,25 @@ uraw3 <- read.csv("Capacity3_UtilizationManufNAICS.csv", head = TRUE, sep=",")
   intanginv <- read.csv("IntangibleInv.csv", skip = 1,head = TRUE, sep=",")
   
   
-DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
-                     head = TRUE, sep=",")
-DebtToEq <- read.csv("Z1_NFCBusiness_CreditMarketDebtAsPercentageOfMarketValueOfCorpEquities.csv",
-                     head = TRUE, sep=",")
-#
+  DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
+                       head = TRUE, sep=",")
+  DebtToEq <- read.csv("Z1_NFCBusiness_CreditMarketDebtAsPercentageOfMarketValueOfCorpEquities.csv",
+                       head = TRUE, sep=",")
+  #
 # Make Time Series of data
-inv1 <- ts(invraw1$K160071A027NBEA, start = c(1951,1),end = c(2016,4),frequency = 4)
-inv2 <- ts(invraw2$FPI, start = c(1947,1),frequency = 4)
-inv3 <- ts(invraw3$FPIC1, start = c(1999,1),frequency = 4)
-inv4 <- ts(invraw4$GPDI, start = c(1947,1),frequency = 4)
-inv5 <- ts(invraw5$GPDIC1, start = c(1947,1),end = c(2016,4),frequency = 4)
-inv6 <- ts(invraw6$NINV, start = c(1951,1),frequency = 4)
-
-profit1 <- ts(profraw1$NFCPATAX, start = c(1947,1),end = c(2016,4),frequency = 4)
-profit2 <- ts(profraw2$A464RC1Q027SBEA, start = c(1947,1),frequency = 4)
-
-capu1 <- ts(uraw1$CAPUTLB00004SQ, start = c(1948,1),end = c(2016,4),frequency = 4)
-capu2 <- ts(uraw2$CAPUTLX4HTK2SQ, start = c(1967,1),frequency = 4)
-capu3 <- ts(uraw3$CUMFN, start = c(1972,1),frequency = 4)
+  inv1 <- ts(invraw1$K160071A027NBEA, start = c(1951,1),end = c(2016,4),frequency = 4)
+  inv2 <- ts(invraw2$FPI, start = c(1947,1),frequency = 4)
+  inv3 <- ts(invraw3$FPIC1, start = c(1999,1),frequency = 4)
+  inv4 <- ts(invraw4$GPDI, start = c(1947,1),frequency = 4)
+  inv5 <- ts(invraw5$GPDIC1, start = c(1947,1),end = c(2016,4),frequency = 4)
+  inv6 <- ts(invraw6$NINV, start = c(1951,1),frequency = 4)
+  
+  profit1 <- ts(profraw1$NFCPATAX, start = c(1947,1),end = c(2016,4),frequency = 4)
+  profit2 <- ts(profraw2$A464RC1Q027SBEA, start = c(1947,1),frequency = 4)
+  
+  capu1 <- ts(uraw1$CAPUTLB00004SQ, start = c(1948,1),end = c(2016,4),frequency = 4)
+  capu2 <- ts(uraw2$CAPUTLX4HTK2SQ, start = c(1967,1),frequency = 4)
+  capu3 <- ts(uraw3$CUMFN, start = c(1972,1),frequency = 4)
 
 #2 alternative FinInv :
   #1st. is Total Fin Asset from Z1
@@ -74,35 +74,35 @@ dbteq <- ts(DebtToEq$NCBCMDPMVCE, start = c(1951,4),frequency = 4)
 
 #
 # PLOT data
-old.par <- par(mfrow=c(1,1))
-pdf("C5_Graph.pdf")
-#
-par(mfrow=c(3,2))
-ts.plot(inv1)
-ts.plot(inv2)
-ts.plot(inv3)
-ts.plot(inv4)
-ts.plot(inv5)
-lines(TotFinInv)
-lines(FinInv)
-ts.plot(inv6)
-par(mfrow=c(3,1))
-ts.plot(capu1)
-ts.plot(capu2)
-# ts.plot(capu3)
-ts.plot(FinInv)
-ts.plot(FinInvRatio)
-ts.plot(FinInvHistRatio)
-ts.plot(AssetTot)
-par(mfrow=c(2,1))
-ts.plot(profit1)
-ts.plot(profit2)
-ts.plot(dbtnw)
-ts.plot(dbteq)
-# restore par
-par(old.par)
-dev.off()
-#
+  old.par <- par(mfrow=c(1,1))
+  pdf("C5_Graph.pdf")
+  #
+  par(mfrow=c(3,2))
+  ts.plot(inv1)
+  ts.plot(inv2)
+  ts.plot(inv3)
+  ts.plot(inv4)
+  ts.plot(inv5)
+  lines(TotFinInv)
+  lines(FinInv)
+  ts.plot(inv6)
+  par(mfrow=c(3,1))
+  ts.plot(capu1)
+  ts.plot(capu2)
+  # ts.plot(capu3)
+  ts.plot(FinInv)
+  ts.plot(FinInvRatio)
+  ts.plot(FinInvHistRatio)
+  ts.plot(AssetTot)
+  par(mfrow=c(2,1))
+  ts.plot(profit1)
+  ts.plot(profit2)
+  ts.plot(dbtnw)
+  ts.plot(dbteq)
+  # restore par
+  par(old.par)
+  dev.off()
+  #
 
 # Stationarity ------------------------------------------------------------
 
@@ -110,25 +110,25 @@ dev.off()
 #2-KPSS:  Ho=stat.
 
 # LEVELS
-adf.test(inv5)
-adf.test(capu1)
-adf.test(profit1)
-adf.test(FinInv)
-adf.test(FinInvRatio)
-adf.test(FinInvHistRatio)
-adf.test(dbtnw)
-adf.test(dbteq)
-# capu1 I(0)
+  adf.test(inv5)
+  adf.test(capu1)
+  adf.test(profit1)
+  adf.test(FinInv)
+  adf.test(FinInvRatio)
+  adf.test(FinInvHistRatio)
+  adf.test(dbtnw)
+  adf.test(dbteq)
+  # capu1 I(0)
 
 # 1st. Diff
-adf.test(diff(inv5))
-adf.test(diff(profit1))
-adf.test(diff(FinInv))
-adf.test(diff(FinInvRatio))
-adf.test(diff(FinInvHistRatio))
-adf.test(diff(dbtnw))
-adf.test(diff(dbteq))
-# all I(1)
+  adf.test(diff(inv5))
+  adf.test(diff(profit1))
+  adf.test(diff(FinInv))
+  adf.test(diff(FinInvRatio))
+  adf.test(diff(FinInvHistRatio))
+  adf.test(diff(dbtnw))
+  adf.test(diff(dbteq))
+  # all I(1)
 
 #Create LIST of 5 variables (i-u-r-Fi-D)
   #1st. ALTERNATIVE --->  (i,r,Fi) = NOMINAL level
@@ -639,38 +639,50 @@ Summary(model1)
 #### 1952 - 2016
 
 #Create dataframe for compatibility with ARDL PACKAGE Funct?
-c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
-                    r=(ecmeq[,3]), fi = (ecmeq[,4]), d = ecmeq[,5])
-ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
-                    r=(data_list[,3]), fi = (data_list[,4]),
-                    ii = data_list[,5], d = data_list[,5])
+  c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
+                      r=(ecmeq[,3]), fi = (ecmeq[,4]), d = ecmeq[,5])
+  ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
+                      r=(data_list[,3]), fi = (data_list[,4]),
+                      ii = data_list[,5], d = data_list[,6])
 
-cdat<-ts(c5dat,start=c(1952,3), end=c(2016,4), frequency=4)
+#1/2 ALTERN.
+  #cdat<-ts(c5dat,start=c(1952,3), end=c(2016,4), frequency=4)
+  cdat<-ts(ardl_data,start=c(1952,3), end=c(2016,4), frequency=4)
 
 # WATCHOUT : use alternatively lvldate according to sample PERIODs
-#52-2016
-lvldata <- cdat
-#52 - 2007
-lvldata <- window(cdat, start = c(1952,3), end=c(2008,1), frequency=4)
-#52 - 1987
-lvldata <- window(cdat, start = c(1952,3), end=c(1987,1), frequency=4)
-#1985 - 2016
-lvldata <- window(cdat, start = c(1987,1), end=c(2016,4), frequency=4)
-#1984 - 2008
-lvldata <- window(cdat, start = c(1984,1), end=c(2008,1), frequency=4)
+  #52-2016
+    lvldata <- cdat
+  #52 - 2007
+    lvldata <- window(cdat, start = c(1952,3), end=c(2008,1), frequency=4)
+  #52 - 1987
+    lvldata <- window(cdat, start = c(1952,3), end=c(1987,1), frequency=4)
+  #1985 - 2016
+    lvldata <- window(cdat, start = c(1987,1), end=c(2016,4), frequency=4)
+  #1984 - 2008
+    lvldata <- window(cdat, start = c(1984,1), end=c(2008,1), frequency=4)
 
 # Write lvldata in CSV 
 write.csv(lvldata, file = "MyData.csv")
 
 # LagSel 1 ----------------------------------------------------------------
 
-# 1st. Alternative : i~u.r.fi
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=2,
-                               xmax=c(4,4,4),case=1,verbose = T,ic = "aic")
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=4,
-                               xmax=c(4,4,4),case=3,verbose = T,ic = "aic")
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=4,
-                               xmax=c(4,4,4),case=5,verbose = T,ic = "aic")
+#1st. Alternative : i~u.r.fi
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=2,
+                                 xmax=c(4,4,4),case=1,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=4,
+                                 xmax=c(4,4,4),case=3,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=4,
+                                 xmax=c(4,4,4),case=5,verbose = T,ic = "aic")
+#2nd. ALTERN. : + intangibles
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fi+ii, data=lvldata, ymax=2,
+                                 xmax=c(4,4,4,4),case=1,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fi+ii, data=lvldata, ymax=4,
+                                 xmax=c(4,4,4,4),case=3,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fi+ii, data=lvldata, ymax=4,
+                                 xmax=c(4,4,4,4),case=5,verbose = T,ic = "aic")
+  #BEST for INTANGIBLES is ARDL(1,1,0,1,1)
+  
+  
 #1952-2016#Best model is inv ~ +1 + L(inv, 1) + L(inv, 2) + L(inv, 3) +
 # L(inv, 4) + u + L(u, 1) + r + L(r, 1) +
 # L(r, 2) + fi + L(fi, 1)
@@ -776,8 +788,8 @@ cmacroc<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=14,
 cmacrod<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=4,
                     xlag=c(1,1,1))
 #1984-2008#
-ArdlRatioAlt1<-ardl::ardl(inv ~ -1+u+r+fi, data=lvldata, ylag=1,
-                          xlag=c(1,0,0), case = 1)
+ArdlRatioAlt1<-ardl::ardl(inv ~ -1+u+r+fi+ii, data=lvldata, ylag=1,
+                          xlag=c(1,0,1,1), case = 1)
 ### test for alternative specification ARDL(1,1,0,1) :
 ArdlRatioAlt1.0<-ardl::ardl(inv ~ -1+u+r+fi, data=lvldata, ylag=1,
                             xlag=c(1,0,1), case = 3)
@@ -817,5 +829,5 @@ cmacroelog<-ardl::ardl(inv~u+r+fi+d, data=lvldata, ylag=1,
 # WALD Test ---------------------------------------------------------------
 
 ######## WALD TEST OK -->  long run relationship btw i~u.r.fi+DEBT ###
-ardl::bounds.test(ArdlRatioAlt1.0)
-ardl::coint(ArdlRatioAlt1.0)
+ardl::bounds.test(ArdlRatioAlt1)
+ardl::coint(ArdlRatioAlt1)
