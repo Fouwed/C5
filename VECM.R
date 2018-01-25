@@ -20,12 +20,14 @@ vdiff_niveau<-diff(vniveau)
 
 vdiff_2_niveau<-diff(vniveau,k=2)
 gd2<-vdiff_2_niveau[,1]
+ts.plot(dts)
+ts.plot(gdpts)
+ts.plot(gts)
 ts.plot(gd2)
-
 # plot level & Diff-lev
 par(mfrow=c(2,2))
 ts.plot(g<-vniveau[,1], ylab="RGDP (log)")
-ts.plot(dnw<-vniveau[,2], ylab="Debt/net worth")
+ts.plot(dnw<-vniveau[,2], ylab="Debt/net worth (level)")
 # plot of diff_Debt_level is informative of
 # the transformation in debt dynamics occuring from mid 1980's
 ts.plot(gd<-vdiff_niveau[,1], ylab="RGDP (diff.)")
@@ -75,7 +77,7 @@ adf.test((dnwd))
 
 library(urca)
 
-# Alternative test is "Elliott, Rothenberg and Stock...
+#Alternative test is "Elliott, Rothenberg and Stock...
   #...(1996), which utilizes GLS detrending" p.167
   # see Elliot & al. (1996, p.825) for Critical values (-3.46 at 1% here)
   # Ho=non-stat.
@@ -86,12 +88,12 @@ library(urca)
     ur.ers(gd,model="trend")
     ur.ers(dnwd,model="trend")  
     
-####       # LOG
-####         ur.ers(gl, model="const")
-####         ur.ers(dnwl)
-####       # Log-Diff
-####         ur.ers(gld,model="trend")
-####         ur.ers(dnwld,model="trend")
+      ####       # LOG
+      ####         ur.ers(gl, model="const")
+      ####         ur.ers(dnwl)
+      ####       # Log-Diff
+      ####         ur.ers(gld,model="trend")
+      ####         ur.ers(dnwld,model="trend")
     
 #also CONFIRM ADF & PP results (only at 2.5% for LOG-Debt)
 
@@ -105,69 +107,69 @@ library(urca)
   #Diff + Trend
     kpss.test(gd,null = "Trend")
     kpss.test(dnwd,null = "Trend")
-    #also CONFIRM ADF, PP & ERS results.
+#also CONFIRM ADF, PP & ERS results.
     
-####       #LOG
-####         kpss.test(gl,null = "Trend")
-####         kpss.test(dnwl,null = "Trend") #both reject Ho of stat.
-####       #Log-Diff ; no-trend
-####         kpss.test(gld)
-####        kpss.test(dnwld) # Debt not diff-stat. --> try including a trend:
-####      #Log-Diff Trend
-####         kpss.test(gld,null = "Trend")
-####         kpss.test(dnwld,null = "Trend")
+      ####       #LOG
+      ####         kpss.test(gl,null = "Trend")
+      ####         kpss.test(dnwl,null = "Trend") #both reject Ho of stat.
+      ####       #Log-Diff ; no-trend
+      ####         kpss.test(gld)
+      ####        kpss.test(dnwld) # Debt not diff-stat. --> try including a trend:
+      ####      #Log-Diff Trend
+      ####         kpss.test(gld,null = "Trend")
+      ####         kpss.test(dnwld,null = "Trend")
 
 
 
-###  NOTE that ADF,PP,ERS are UnitRoot test
-#       while KPSS is Stationarity test
-
-
-# WATCHOUT !!          ##
-# do UR test again to
-# consider time trends
-# versus constant
-# of deterministic
-# component           ##
+    ###  NOTE that ADF,PP,ERS are UnitRoot test
+    #       while KPSS is Stationarity test
+    
+    
+    # WATCHOUT !!          ##
+    # do UR test again to
+    # consider time trends
+    # versus constant
+    # of deterministic
+    # component           ##
 
 
 
 ### COINTEGRAT? #####
 
-# Elliot &. also have cointegr?
-
-# Phillips Ouliaris test  # Ho: no cointegrat?
-  # LEVELS
-    po.test(cbind(g,dnw), demean = T, lshort = T)      #  NO COINT
-    po.test(cbind(dnw,g), demean = T, lshort = T) # idem the other way round
-   ### RESULTS:  NO Cointegration
-    
-####         # LOG
-####           po.test(vlog[,1:2], demean = T, lshort = T)      #  COINT
-####           po.test(vlog[,2:1], demean = T, lshort = T) # idem the other way round
-####          ## RESULTS:  Cointegration
-
-# Johansen test
-  # Ho: no cointegrat? (r=0 against r>0 , then r<=1 against r>1 etc..)
-        # A rank r>0 implies a cointegrating relationship
-        # between two or possibly more time series
-####            #LOG
-####              jojo<-ca.jo(vlog[,(1:2)])#,ecdet="const",type="trace")
-####              summary(jojo)
-####              # NO COINT in log ##
-    
-  #MAX
-    jojolevel<-ca.jo(cbind(g,dnw),ecdet="const") #,type="trace")
-    summary(jojolevel)
-   # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
-        #  for r<=1: tstat < crit.val. --> cointegration btw (x+1) variables
-  #TRACE
-     jojolevTrace<-ca.jo(cbind(g,dnw),ecdet="const",type="trace")
-    summary(jojolevTrace)
-   ## RESULTS: Cointegration
+  #Elliot &. also have cointegr?
+  
+  #Phillips Ouliaris test  # Ho: no cointegrat?
+    # LEVELS
+      po.test(cbind(g,dnw), demean = T, lshort = T)      #  NO COINT
+      po.test(cbind(dnw,g), demean = T, lshort = T) # idem the other way round
+     ### RESULTS:  NO Cointegration
+      
+      ####         # LOG
+      ####           po.test(vlog[,1:2], demean = T, lshort = T)      #  COINT
+      ####           po.test(vlog[,2:1], demean = T, lshort = T) # idem the other way round
+      ####          ## RESULTS:  Cointegration
+  
+  #Johansen test
+    #Ho: no cointegrat? (r=0 against r>0 , then r<=1 against r>1 etc..)
+          # A rank r>0 implies a cointegrating relationship
+          # between two or possibly more time series
+      ####            #LOG
+      ####              jojo<-ca.jo(vlog[,(1:2)])#,ecdet="const",type="trace")
+      ####              summary(jojo)
+      ####              # NO COINT in log ##
+      
+    #MAX
+      jojolevel<-ca.jo(cbind(g,dnw),ecdet="const") #,type="trace")
+      summary(jojolevel)
+     # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
+          #  for r<=1: tstat < crit.val. --> cointegration btw (x+1) variables
+    #TRACE
+       jojolevTrace<-ca.jo(cbind(g,dnw),ecdet="const",type="trace")
+      summary(jojolevTrace)
+     ## RESULTS: Cointegration
 #
 
-# test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
+#Test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
   #LEVEL
     jojoStruct <- cajolst(cbind(g,dnw))
     summary(jojoStruct)
@@ -182,8 +184,9 @@ library(urca)
     ####                summary(jojoLOGStruct)
     ####                slot(jojoLOGStruct, "bp")
     ####                ## RESULTS: NO Cointegration once break accounted for
+#
     
-#TEST 3 separate periods FOR FINANCIALIZATION ACCOUNT
+#TEST 3 separated periods FOR FINANCIALIZATION ACCOUNT
   #RESAMPLE
     #LEVEL
       vniveaupostBpt <- window(vniveau,start=1983,end=2016)
@@ -196,17 +199,17 @@ library(urca)
     
   #POST 
     #Phillips Ouliaris test  # Ho: no cointegrat?
-    #LEVEL
-      #P.O
-      po.test(vniveaupostBpt[,1:2], demean = T, lshort = T)      #  NO COINT
-      po.test(vniveaupostBpt[,2:1], demean = T, lshort = T) # idem the other way round
-        ## RESULTS:  NO Cointegration in LEVELS
-      #JO
-      jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
-      summary(jojopostBpt)
-        ## RESULTS: COINT at 1% from 1983 on !!!
-        #           i.e one may estimate a VECM for G&D
-        #           goto SVAR section
+      #LEVEL
+        #P.O
+        po.test(vniveaupostBpt[,1:2], demean = T, lshort = T)      #  NO COINT
+        po.test(vniveaupostBpt[,2:1], demean = T, lshort = T) # idem the other way round
+        ## RESULTS:  NO Cointegration
+    #JOHANSEN
+        jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+        summary(jojopostBpt)
+      ##RESULTS: COINT at 1% from 1983 on !!!
+      #           i.e one may estimate a VECM for G&D
+      #           goto SVAR section
       
       ####                #LOG
       ####                  po.test(vlogpostBpt[,1:2], demean = T, lshort = T) 
@@ -254,141 +257,158 @@ library(urca)
 
 library(strucchange)
 
-#1- StrBrk_1 : EFP ----------------------------------------------------------
-# EFP = empirical fluct? process
-# Ho: no struct. break (Kleiber p.171)
-
+### STRUCT. BREAK TESTS
+  #1- StrBrk_1 : EFP ----------------------------------------------------------
+    # EFP = empirical fluct? process
+    # Ho: no struct. break (Kleiber p.171)
+    
+            
+    ####### GROWTH ########
+  
+      #Type= MOsum
+        #RGDP LEVEL - ALL DATA RANGE
+          efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
+            # 0.053 --> 3 years
+          plot(efpMo_rgdp)
+        ### RGDP BREAK in early 1980's   ##
+      #
+      #Type= CUMsum
+        #Log(RGDP) & narrowing data range from 1973 on...
+          post73<-window(g,start=1974)
+          efpCum_g73 <- efp(post73 ~ 1)
+          plot(efpCum_g73)
+        ### logRGDP BREAK in 1984   ###
+    
+    ### OLD - G ### -----------------------------------------------------------------
+    
         
-####### GROWTH ########
-
-  #### type= Rec. MOsum
-    # ALL DATA RANGE
-    efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
-      # 0.053 --> 3 years
-    plot(efpMo_rgdp)
+        
+      # set list for Alternative regression fits
+                       #1 #2  #3            #4
+    vbn21<-ts.intersect(g,gd,lag(g,k=-1),lag(gd,k=-1))
+    vbn22<-ts.intersect(gl,gld,lag(gl,k=-1),lag(gld,k=-1))
+                        #1  #2   #3            #4
     
-  ### type= Rec. CUsum
-    # & narrowing data range from 1973 on...
-    post73<-window(g,start=1974)
-    efpCum_g73 <- efp(post73 ~ 1)
-    plot(efpCum_g73)
-  
-  ###  BREAK in end 1980's   ###
-  #        for g               #
-
-
-# OLD - G -----------------------------------------------------------------
-
-    
-    
-  # set list for Alternative regression fits
-                   #1 #2  #3            #4
-vbn21<-ts.intersect(g,gd,lag(g,k=-1),lag(gd,k=-1))
-vbn22<-ts.intersect(gl,gld,lag(gl,k=-1),lag(gld,k=-1))
-                    #1  #2   #3            #4
-
-### REcursive CUMSUM
-  efpCum_g <- efp(g ~ 1)     #vbn21[,1]
-  plot(efpCum_g)  # break in 1973 oil crisis
-  
-  
-    efpMo_g73 <- efp(post73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
-    # 0.087 --> 3 years
-    plot(efpMo_g73)
-  
-    
-### DIFF. RGDP
-  efp_gd <- efp(diff(gdpts) ~ 1)   #vbn21[,2]
-  plot(efp_gd)
-  ###  BREAK in early 1990's ###
-  #        for g.diff          #
-
-
-
-
-  # Iteration on h parameter (window of the mobile average)
-  #/for(i in 100:200){
-  #print(ii<-i*.001)
-  # sc_efp_g <- efp(post73 ~ 1, type = "Rec-MOSUM",h=ii)
-  # plot(sc_efp_g,main = ii)
-  #}
-
-
-# Alternative efp-regression
-Mpost73<-window(vbn21,start=1974)
-sc_efp1_g <- efp(Mpost73[,1] ~ 1+Mpost73[,3], type = "OLS-MOSUM")
-plot(sc_efp1_g)
-### RAS ###
-
-sc_efp2_g <- efp(vbn21[,1] ~ 1+vbn21[,3], type = "OLS-MOSUM")
-plot(sc_efp2_g)
-### RAS ###
-
-
-### REcursive CUMSUM
-          ######    efpCum_d <- efp(dnw ~ 1)     #vbn21[,1]
-          ######    plot(efpCum_d)  # break in 1973 oil crisis
-          ######    # R.A.S
-          ######    # narrowing data range from 1973 on...
-          ######    dpost73<-window(dnw,start=1976)
-          ######    efpCum_d73 <- efp(dpost73 ~ 1)
-          ######    plot(efpCum_d73)
-          ######    efpMo_d73 <- efp(dpost73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
-          ######    # 0.087 --> 3 years
-          ######    plot(efpMo_d73)
-
-
-####  DEBT    #####
-
-  # type= Rec. MOSUM
-    efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
-    # 0.053 --> 3 years
-    plot(efpMo_d)
-  ###  BREAK in 1973 then   ###
-  #    mid 1980's for dnw     #
-
-
+    ### REcursive CUMSUM
+      efpCum_g <- efp(g ~ 1)     #vbn21[,1]
+      plot(efpCum_g)  # break in 1973 oil crisis
       
-
-
-
-# struct. break when out of conf. interv.
-  # struc. br. if p.value<conf.int.  i.e reject Ho
-sctest(efpMo_rgdp)
-sctest(efpCum_g73)
-sctest(efpMo_d)
-
-####         sctest(efpMo_g73)
-####         sctest(sc_efp2_g)
-
-
-# struct. breaks found for diff(realGDP)
-plot(efpMo_rgdp)
-plot(efpCum_g73)
-plot(efpMo_d)
-
-plot(efpCum_g73, alpha = 0.05, alt.boundary = TRUE)
-
-
-#2- StrBrk_2 : Fstat --------------------------------------------------------
-
-#### GROWTH
-
-fs.growth <- Fstats(g ~ 1)
-plot(fs.growth)
-breakpoints(fs.growth)
-plot(g)
-lines(breakpoints(fs.growth))
-###    Break: 1983.3     #####
-bp.growth <- breakpoints(g ~ 1,breaks = 1)
-summary(bp.growth)
-fmg0 <- lm(g ~ 1)
-fmgf <- lm(g ~ breakfactor(bp.growth))#,breaks = 1))
-plot(g)
-lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-lines(bp.growth)
-
+      
+        efpMo_g73 <- efp(post73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
+        # 0.087 --> 3 years
+        plot(efpMo_g73)
+      
+        
+    ### DIFF. RGDP
+      efp_gd <- efp(diff(gdpts) ~ 1)   #vbn21[,2]
+      plot(efp_gd)
+      ###  BREAK in early 1990's ###
+      #        for g.diff          #
+    
+    
+    
+    
+      # Iteration on h parameter (window of the mobile average)
+      #/for(i in 100:200){
+      #print(ii<-i*.001)
+      # sc_efp_g <- efp(post73 ~ 1, type = "Rec-MOSUM",h=ii)
+      # plot(sc_efp_g,main = ii)
+      #}
+    
+    
+    # Alternative efp-regression
+    Mpost73<-window(vbn21,start=1974)
+    sc_efp1_g <- efp(Mpost73[,1] ~ 1+Mpost73[,3], type = "OLS-MOSUM")
+    plot(sc_efp1_g)
+    ### RAS ###
+    
+    sc_efp2_g <- efp(vbn21[,1] ~ 1+vbn21[,3], type = "OLS-MOSUM")
+    plot(sc_efp2_g)
+    ### RAS ###
+    
+    
+    ### REcursive CUMSUM
+              ######    efpCum_d <- efp(dnw ~ 1)     #vbn21[,1]
+              ######    plot(efpCum_d)  # break in 1973 oil crisis
+              ######    # R.A.S
+              ######    # narrowing data range from 1973 on...
+              ######    dpost73<-window(dnw,start=1976)
+              ######    efpCum_d73 <- efp(dpost73 ~ 1)
+              ######    plot(efpCum_d73)
+              ######    efpMo_d73 <- efp(dpost73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
+              ######    # 0.087 --> 3 years
+              ######    plot(efpMo_d73)
+    
+    
+    
+    ######  DEBT  ######
+  
+      ### type= MOSUM
+        efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
+        # 0.053 --> 3 years
+        plot(efpMo_d)
+      # BREAK in 1973 then mid 1980's for dnw   #
+    
+      ### type= Recursive-CUMSUM
+        efpReCum_d <- efp(dnw ~ 1)
+        # 0.053 --> 3 years
+        plot(efpReCum_d, alpha = 0.05, alt.boundary = TRUE)
+      # BREAK in late 1960's       
+        
+  
+    #Struct. break when out of conf. interv.
+        # struc. br. if p.value<conf.int.  i.e reject Ho
+      sctest(efpMo_rgdp)
+      sctest(efpCum_g73)
+      sctest(efpMo_d)
+      
+      ####         sctest(efpMo_g73)
+      ####         sctest(sc_efp2_g)
+      
+      
+      # struct. breaks found for diff(realGDP)
+      plot(efpMo_rgdp)
+      plot(efpCum_g73)
+      plot(efpMo_d)
+      
+      plot(efpCum_g73, alpha = 0.05, alt.boundary = TRUE)
+    #
+  #
+      
+  #2- StrBrk_2 : Fstat --------------------------------------------------------
+  
+    #### GROWTH  #####
+    #LOGrdp
+      fs.growth <- Fstats(g ~ 1)
+      plot(fs.growth)
+      breakpoints(fs.growth)
+      plot(g)
+      lines(breakpoints(fs.growth))
+      bp.growth <- breakpoints(g ~ 1,breaks = 1)
+      summary(bp.growth)
+      fmg0 <- lm(g ~ 1)
+      fmgf <- lm(g ~ breakfactor(bp.growth))#,breaks = 1))
+      plot(g)
+      lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+      lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+      lines(bp.growth)
+      
+     #RGDP
+      fs.gdpts <- Fstats(gdpts ~ 1)
+      plot(fs.gdpts)
+      breakpoints(fs.gdpts)
+      plot(gdpts)
+      lines(breakpoints(fs.gdpts))
+      ## Break: 1989.1 #####
+      bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
+      summary(bp.gdpts)
+      fmg0 <- lm(gdpts ~ 1)
+      fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
+      plot(gdpts)
+      lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+      lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+      lines(bp.gdpts)
+      
 ###  Sample OUT of 2007 crisis  ####
 ####################################  window(g,start=1952,end=2008)
 g2007<-window(g,start=1952,end=2008)
