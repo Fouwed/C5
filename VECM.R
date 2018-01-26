@@ -251,9 +251,6 @@ library(urca)
         summary(jojoBTW)
        ###  COINT 
       
-#### Structural break tests ##########
-
-
 
 library(strucchange)
 
@@ -263,8 +260,7 @@ library(strucchange)
     # Ho: no struct. break (Kleiber p.171)
     
             
-    ####### GROWTH ########
-  
+    ## GROWTH ##
       #Type= MOsum
         #RGDP LEVEL - ALL DATA RANGE
           efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
@@ -277,72 +273,9 @@ library(strucchange)
           post73<-window(g,start=1974)
           efpCum_g73 <- efp(post73 ~ 1)
           plot(efpCum_g73)
-        ### logRGDP BREAK in 1984   ###
-    
-    ### OLD - G ### -----------------------------------------------------------------
-    
-        
-        
-      # set list for Alternative regression fits
-                       #1 #2  #3            #4
-    vbn21<-ts.intersect(g,gd,lag(g,k=-1),lag(gd,k=-1))
-    vbn22<-ts.intersect(gl,gld,lag(gl,k=-1),lag(gld,k=-1))
-                        #1  #2   #3            #4
-    
-    ### REcursive CUMSUM
-      efpCum_g <- efp(g ~ 1)     #vbn21[,1]
-      plot(efpCum_g)  # break in 1973 oil crisis
-      
-      
-        efpMo_g73 <- efp(post73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
-        # 0.087 --> 3 years
-        plot(efpMo_g73)
-      
-        
-    ### DIFF. RGDP
-      efp_gd <- efp(diff(gdpts) ~ 1)   #vbn21[,2]
-      plot(efp_gd)
-      ###  BREAK in early 1990's ###
-      #        for g.diff          #
-    
-    
-    
-    
-      # Iteration on h parameter (window of the mobile average)
-      #/for(i in 100:200){
-      #print(ii<-i*.001)
-      # sc_efp_g <- efp(post73 ~ 1, type = "Rec-MOSUM",h=ii)
-      # plot(sc_efp_g,main = ii)
-      #}
-    
-    
-    # Alternative efp-regression
-    Mpost73<-window(vbn21,start=1974)
-    sc_efp1_g <- efp(Mpost73[,1] ~ 1+Mpost73[,3], type = "OLS-MOSUM")
-    plot(sc_efp1_g)
-    ### RAS ###
-    
-    sc_efp2_g <- efp(vbn21[,1] ~ 1+vbn21[,3], type = "OLS-MOSUM")
-    plot(sc_efp2_g)
-    ### RAS ###
-    
-    
-    ### REcursive CUMSUM
-              ######    efpCum_d <- efp(dnw ~ 1)     #vbn21[,1]
-              ######    plot(efpCum_d)  # break in 1973 oil crisis
-              ######    # R.A.S
-              ######    # narrowing data range from 1973 on...
-              ######    dpost73<-window(dnw,start=1976)
-              ######    efpCum_d73 <- efp(dpost73 ~ 1)
-              ######    plot(efpCum_d73)
-              ######    efpMo_d73 <- efp(dpost73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
-              ######    # 0.087 --> 3 years
-              ######    plot(efpMo_d73)
-    
-    
-    
-    ######  DEBT  ######
-  
+          ### logRGDP BREAK in 1984   ###
+      #
+    ## DEBT ##
       ### type= MOSUM
         efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
         # 0.053 --> 3 years
@@ -356,7 +289,7 @@ library(strucchange)
       # BREAK in late 1960's       
         
   
-    #Struct. break when out of conf. interv.
+    #Out of conf. interv.
         # struc. br. if p.value<conf.int.  i.e reject Ho
       sctest(efpMo_rgdp)
       sctest(efpCum_g73)
@@ -377,109 +310,69 @@ library(strucchange)
       
   #2- StrBrk_2 : Fstat --------------------------------------------------------
   
-    #### GROWTH  #####
-    #LOGrdp
-      fs.growth <- Fstats(g ~ 1)
-      plot(fs.growth)
-      breakpoints(fs.growth)
-      plot(g)
-      lines(breakpoints(fs.growth))
-      bp.growth <- breakpoints(g ~ 1,breaks = 1)
-      summary(bp.growth)
-      fmg0 <- lm(g ~ 1)
-      fmgf <- lm(g ~ breakfactor(bp.growth))#,breaks = 1))
-      plot(g)
-      lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-      lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-      lines(bp.growth)
-      
-     #RGDP
-      fs.gdpts <- Fstats(gdpts ~ 1)
-      plot(fs.gdpts)
-      breakpoints(fs.gdpts)
-      plot(gdpts)
-      lines(breakpoints(fs.gdpts))
-      ## Break: 1989.1 #####
-      bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
-      summary(bp.gdpts)
-      fmg0 <- lm(gdpts ~ 1)
-      fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
-      plot(gdpts)
-      lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-      lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-      lines(bp.gdpts)
-      
-###  Sample OUT of 2007 crisis  ####
-####################################  window(g,start=1952,end=2008)
-g2007<-window(g,start=1952,end=2008)
-bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
-summary(bp.growth2007)
-fmg0 <- lm(g2007 ~ 1)
-fmgf <- lm(g2007 ~ breakfactor(bp.growth2007))#,breaks = 1))
-plot(g2007)
-lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-lines(bp.growth2007)
+    ## GROWTH ##
+      #LOG-rgdp
+        fs.growth <- Fstats(g ~ 1)
+        plot(fs.growth)
+        breakpoints(fs.growth)
+        plot(g)
+        lines(breakpoints(fs.growth))
+        bp.growth <- breakpoints(g ~ 1,breaks = 1)
+        summary(bp.growth)
+        fmg0 <- lm(g ~ 1)
+        fmgf <- lm(g ~ breakfactor(bp.growth))#,breaks = 1))
+        plot(g)
+        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+        lines(bp.growth)
+      # 
+      #RGDP
+        fs.gdpts <- Fstats(gdpts ~ 1)
+        plot(fs.gdpts)
+        breakpoints(fs.gdpts)
+        plot(gdpts)
+        lines(breakpoints(fs.gdpts))
+        ##Break: 1989.1
+        #
+        bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
+        summary(bp.gdpts)
+        fmg0 <- lm(gdpts ~ 1)
+        fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
+        plot(gdpts)
+        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+        lines(bp.gdpts)
+      #  
+      ##Sample OUT of 2007 crisis##
+        g2007<-window(g,start=1952,end=2008)
+        bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
+        summary(bp.growth2007)
+        fmg0 <- lm(g2007 ~ 1)
+        fmgf <- lm(g2007 ~ breakfactor(bp.growth2007))#,breaks = 1))
+        plot(g2007)
+        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+        lines(bp.growth2007)
+      #
 
+    ## DEBT ##
+      fs.debt2 <- Fstats(dnw ~ 1)
+      plot(fs.debt2)
+      plot(dnw)
+      breakpoints(fs.debt2)
+      lines(breakpoints(fs.debt2))
+      ####### Break 1985.3
 
+      bp.debt2 <- breakpoints(dnw ~ 1,breaks = 1)
+      summary(bp.debt2)
+      fmdnw0 <- lm(dnw ~ 1)
+      fmdnwf <- lm(dnw ~ breakfactor(bp.debt2))#,breaks = 1))
+      plot(dnw)
+      lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
+      lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
+      lines(bp.debt2)
+    ##
 
-###### DEBT Level #######
-fs.debt2 <- Fstats(dnw ~ 1)
-plot(fs.debt2)
-plot(dnw)
-breakpoints(fs.debt2)
-lines(breakpoints(fs.debt2))
-####### Break 1985.3
-
-bp.debt2 <- breakpoints(dnw ~ 1,breaks = 1)
-summary(bp.debt2)
-fmdnw0 <- lm(dnw ~ 1)
-fmdnwf <- lm(dnw ~ breakfactor(bp.debt2))#,breaks = 1))
-plot(dnw)
-lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
-lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
-lines(bp.debt2)
-
-
-
-####  OLD Growth Log  ####
-
-Lfs.growth <- Fstats(gl ~ 1)
-plot(Lfs.growth)
-breakpoints(Lfs.growth)
-plot(gl)
-lines(breakpoints(Lfs.growth))
-
-Lbp.growth <- breakpoints(gl ~ 1,breaks = 1)
-summary(Lbp.growth)
-fmg0 <- lm(gl ~ 1)
-fmgf <- lm(gl ~ breakfactor(Lbp.growth))#,breaks = 1))
-plot(gl)
-lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-lines(Lbp.growth)
-####################################  window(g,start=1952,end=2008)
-gl2007<-window(gl,start=1955,end=2008)
-bp.growthl2007 <- breakpoints(gl2007 ~ 1,breaks = 1)
-summary(bp.growthl2007)
-
-
-####  OLD  DEBT  Log #######
-Lfs.debt2 <- Fstats(dnwl ~ 1)
-plot(Lfs.debt2)
-plot(dnwl)
-breakpoints(Lfs.debt2)
-lines(breakpoints(Lfs.debt2))
-
-Lbp.debt2 <- breakpoints(dnwl ~ 1,breaks = 2)
-summary(Lbp.debt2)
-
-fmdnw0 <- lm(dnwl ~ 1)
-fmdnwf <- lm(dnwl ~ breakfactor(Lbp.debt2))#,breaks = 1))
-plot(dnwl)
-lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
-lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
-lines(Lbp.debt2)
 
 
 
@@ -628,4 +521,104 @@ plot(GvarD.impgrowth.irf)
 dev.off()
 
 
+### OLD - Struct break ### -----------------------------------------------------------------
+
+
+
+# set list for Alternative regression fits
+#1 #2  #3            #4
+vbn21<-ts.intersect(g,gd,lag(g,k=-1),lag(gd,k=-1))
+vbn22<-ts.intersect(gl,gld,lag(gl,k=-1),lag(gld,k=-1))
+#1  #2   #3            #4
+
+### REcursive CUMSUM
+efpCum_g <- efp(g ~ 1)     #vbn21[,1]
+plot(efpCum_g)  # break in 1973 oil crisis
+
+
+efpMo_g73 <- efp(post73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
+# 0.087 --> 3 years
+plot(efpMo_g73)
+
+
+### DIFF. RGDP
+efp_gd <- efp(diff(gdpts) ~ 1)   #vbn21[,2]
+plot(efp_gd)
+###  BREAK in early 1990's ###
+#        for g.diff          #
+
+
+
+
+# Iteration on h parameter (window of the mobile average)
+#/for(i in 100:200){
+#print(ii<-i*.001)
+# sc_efp_g <- efp(post73 ~ 1, type = "Rec-MOSUM",h=ii)
+# plot(sc_efp_g,main = ii)
+#}
+
+
+# Alternative efp-regression
+Mpost73<-window(vbn21,start=1974)
+sc_efp1_g <- efp(Mpost73[,1] ~ 1+Mpost73[,3], type = "OLS-MOSUM")
+plot(sc_efp1_g)
+### RAS ###
+
+sc_efp2_g <- efp(vbn21[,1] ~ 1+vbn21[,3], type = "OLS-MOSUM")
+plot(sc_efp2_g)
+### RAS ###
+
+
+### REcursive CUMSUM
+######    efpCum_d <- efp(dnw ~ 1)     #vbn21[,1]
+######    plot(efpCum_d)  # break in 1973 oil crisis
+######    # R.A.S
+######    # narrowing data range from 1973 on...
+######    dpost73<-window(dnw,start=1976)
+######    efpCum_d73 <- efp(dpost73 ~ 1)
+######    plot(efpCum_d73)
+######    efpMo_d73 <- efp(dpost73 ~ 1, type = "Rec-MOSUM",h=0.087)#1980's break whithin 0.08-->0.1
+######    # 0.087 --> 3 years
+######    plot(efpMo_d73)
+
+## OLD Growth Log ##
+Lfs.growth <- Fstats(gl ~ 1)
+plot(Lfs.growth)
+breakpoints(Lfs.growth)
+plot(gl)
+lines(breakpoints(Lfs.growth))
+
+Lbp.growth <- breakpoints(gl ~ 1,breaks = 1)
+summary(Lbp.growth)
+fmg0 <- lm(gl ~ 1)
+fmgf <- lm(gl ~ breakfactor(Lbp.growth))#,breaks = 1))
+plot(gl)
+lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+lines(Lbp.growth)
+####################################  window(g,start=1952,end=2008)
+gl2007<-window(gl,start=1955,end=2008)
+bp.growthl2007 <- breakpoints(gl2007 ~ 1,breaks = 1)
+summary(bp.growthl2007)
+##
+
+
+
+## OLD  DEBT  Log ##
+Lfs.debt2 <- Fstats(dnwl ~ 1)
+plot(Lfs.debt2)
+plot(dnwl)
+breakpoints(Lfs.debt2)
+lines(breakpoints(Lfs.debt2))
+
+Lbp.debt2 <- breakpoints(dnwl ~ 1,breaks = 2)
+summary(Lbp.debt2)
+
+fmdnw0 <- lm(dnwl ~ 1)
+fmdnwf <- lm(dnwl ~ breakfactor(Lbp.debt2))#,breaks = 1))
+plot(dnwl)
+lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
+lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
+lines(Lbp.debt2)
+##
 
