@@ -80,29 +80,41 @@ dbteq <- ts(DebtToEq$NCBCMDPMVCE, start = c(1951,4),frequency = 4)
 
 
 #Create LIST of 6 variables (i-u-r-Fi-Ii-D)
+
 #1st. ALTERNATIVE --->  (i,r,Fi) = NOMINAL level
-#data_list<- ts.intersect(inv5,capu1,profit1,FinInv,dbtnw)
+  data_list<- ts.intersect(inv5,capu1,profit1,FinInv,dbtnw)
+
 #After Peter's comment, I change 3 variables (Inv, Profit, FinInv)
+
 #2nd ALTERNATIVE --->  (i,r,Fi) = LOGARITHM
-#data_list<- ts.intersect(log(inv5),capu1,log(profit1),
-#log(FinInv),dbtnw)
+  data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                            log(FinInv),dbtnw)
+
 #3rd ALTERNATIVE --->  (i,r,Fi) = RATIO of Total NFC Assets
-#data_list<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
-#                      (FinInv/AssetTot),dbtnw)
+  data_list<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
+                           (FinInv/AssetTot),dbtnw)
+  
 #4th ALTERNATIVE --->  (i,r,Fi,Ii) = RATIO of Total NFC Assets
-#data_list<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
-#                   (FinInv/AssetTot),(IntInv/AssetTot),dbtnw)
+  data_list<- ts.intersect((inv5/AssetTot),capu1,(profit1/AssetTot),
+                         (FinInv/AssetTot),(IntInv/AssetTot),dbtnw)
 
 #5th ALTERNATIVE --->  (i,r,Fi,Ii) = LOGARITHM
-#data_list<- ts.intersect(log(inv5),capu1,log(profit1),
-#                        log(FinInv),log(IntInv),dbtnw)    
+  data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                          log(FinInv),log(IntInv),dbtnw)    
 
 # ++ ALTERNATIVE --->  FinInvRatio
 data_list<- ts.intersect(log(inv5),capu1,log(profit1),
-                         log(FinInvRatio),log(IntInv),dbtnw)
-# ++ ALTERNATIVE --->  FinInvHistRatio
-#data_list<- ts.intersect(inv5,capu1,profit1,FinInvHistRatio,dbtnw)
+                         FinInvRatio,log(IntInv),dbtnw)
 
+# ++ ALTERNATIVE --->  FinInv/AssetTot
+data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                         (FinInv/AssetTot),log(IntInv),dbtnw)
+
+# ++ ALTERNATIVE --->  FinInvHistRatio
+  data_list<- ts.intersect(inv5,capu1,profit1,FinInvHistRatio,dbtnw)
+
+  
+  
 #Create LIST of 5X5 variables (i-u-r-Fi-D)x(level-diff-lagLevel-2xlagDiff)
 difdata_list <- diff(data_list)
 lagdata_list <- lag(data_list, k=-1)
@@ -736,7 +748,7 @@ c5select1 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
 c5select3 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
                              xmax=c(4,4,4,4,4),case=3,verbose = T)
 c5select5 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
-                             xmax=c(4,4,4,4,4),case=5,verbose = T)
+                             xmax=c(4,4,4,4,9),case=5,verbose = T)
 
 
 #1952-2016
@@ -765,24 +777,36 @@ c5select5 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
   retards<-c(1,1,0,1) ###
 ##Second Most significative Model 
   retards<-c(1,1,0,0) #
+  
+  # INTANGIBLES NO DEBT
+      ##Best Intangible No Debt
+      retards<-c(3,1,3,3,1)
+      ##Best Intangible ++ Debt
+      retards<-c(1,1,0,0,1,1) 
+      
+      ##Best FinInvRatio ++ Intangible No Debt
+      retards<-c(3,1,3,0,3) #Case 5
+        #2nd Best
+        retards<-c(1,1,1,1,1) #Case 3
+  
+      ##Best FinInvRatio ++ Intangible ++ Debt
+      retards<-c(3,1,0,0,0,1) 
 
-##Best Intangible No Debt
-retards<-c(3,1,3,3,1)
-##Best Intangible ++ Debt
-retards<-c(1,1,0,0,1,1) 
-
-##Best FinInvRatio ++ Intangible No Debt
-retards<-c(3,1,3,0,3)
-##Best FinInvRatio ++ Intangible ++ Debt
-retards<-c(3,1,0,0,0,1) 
-
+      ##Best FinInv/TotAsset ++ Intangible No Debt
+      retards<-c(1,1,1,0,1) #Case 5
+      #2nd Best
+      retards<-c(1,1,1,1,1) #Case 3
+      
+      ##Best FinInv/TotAsset ++ Intangible ++ Debt
+      retards<-c(1,1,0,0,1,1) 
+      
 cas<- c(1,3,3,5,5)
 
 # 1st. Alternative : i~u.r.fi+ii  -->Case=5
 mod <- ardl( inv~u+r+fi+ii, data=lvldata, ylag=retards[1], xlag=retards[2:5], case=cas[5], quiet=FALSE )
 summary(mod)
 
-# 2nd. Alternative : i~u.r.fi+ii+DEBT  -->Case=3
+# 2nd. Alternative : i~u.r.fi+ii+DEBT  --> Case=3 OR 5
 mod <- ardl( inv~u+r+fi+ii+d, data=lvldata, ylag=retards[1], xlag=retards[2:6], case=cas[5], quiet=FALSE )
 summary(mod)
 
