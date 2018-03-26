@@ -2,6 +2,7 @@
 #
 # set working Directory
 setwd("C:/Users/Ferdi/Documents/R/C5")
+setwd("C:/Users/fouwe/Documents/R/C5")
 
 library(tseries)
 library(vars)
@@ -111,8 +112,8 @@ data_list<- ts.intersect(log(inv5),capu1,log(profit1),
                          (FinInv/AssetTot),log(IntInv),dbtnw)
 
 # ++ ALTERNATIVE --->  FinInvHistRatio
-  data_list<- ts.intersect(inv5,capu1,profit1,FinInvHistRatio,dbtnw)
-
+  data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                           (FinInvHistRatio),log(IntInv),dbtnw)
   
   
 #Create LIST of 5X5 variables (i-u-r-Fi-D)x(level-diff-lagLevel-2xlagDiff)
@@ -800,6 +801,9 @@ c5select5 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
       ##Best FinInv/TotAsset ++ Intangible ++ Debt
       retards<-c(1,1,0,0,1,1) 
       
+      ##Best FinInvHistRatio ++ Intangible ++ Debt
+      retards<-c(3,1,0,0,0,1) 
+      
 cas<- c(1,3,3,5,5)
 
 # 1st. Alternative : i~u.r.fi+ii  -->Case=5
@@ -807,14 +811,16 @@ mod <- ardl( inv~u+r+fi+ii, data=lvldata, ylag=retards[1], xlag=retards[2:5], ca
 summary(mod)
 
 # 2nd. Alternative : i~u.r.fi+ii+DEBT  --> Case=3 OR 5
-mod <- ardl( inv~u+r+fi+ii+d, data=lvldata, ylag=retards[1], xlag=retards[2:6], case=cas[5], quiet=FALSE )
+mod <- ardl( inv~u+r+fi+ii+d, data=lvldata, ylag=retards[1], xlag=retards[2:6], case=cas[3], quiet=FALSE )
 summary(mod)
 
 # Summary
 ardl::bounds.test(mod)
 ardl::coint(mod)
 
-Box.test(mod$residuals,lag = 8, type="Ljung-Box",fitdf=sum(retards))
+plot(mod)
+Box.test(mod$residuals,lag = 5, type="Ljung-Box",fitdf=sum(retards))
+car::ncvTest(mod)
 
 qqnorm(mod$residuals)
 qqline(mod$residuals)  
@@ -822,7 +828,7 @@ bgtest(mod$residuals)
 
 boxplot(mod$residuals)
 hist(mod$residuals)
-shapiro.test(ArdlRatioAlt1.0$residuals) #Royston (1995) to be adequate for p.value < 0.1.
+shapiro.test(mod$residuals) #Royston (1995) to be adequate for p.value < 0.1.
 
 ## Estimation ##
 
