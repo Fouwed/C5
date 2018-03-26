@@ -76,7 +76,7 @@ dbteq <- ts(DebtToEq$NCBCMDPMVCE, start = c(1951,4),frequency = 4)
 #
 
 
-# DataSET -----------------------------------------------------------------
+# DataSET ----------------------------------------------------------------
 
 
 #Create LIST of 6 variables (i-u-r-Fi-Ii-D)
