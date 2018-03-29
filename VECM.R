@@ -1,14 +1,22 @@
-setwd("C:/Users/Ferdi/Documents/R")
+setwd("C:/Users/Ferdi/Documents/R/C5")
 library(tseries)
 # Read data
 RealGrowth <- read.csv("Z1_RGDP_3Dec_GDPC96.csv", head = TRUE, sep=",")
 DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
                      head = TRUE, sep=",")
-
+RgdpPerCAPITA <- read.csv("RGDPperCAPITA.csv", skip = 4, head = TRUE, sep=",")
+"Real GDP per capita in 2011US$, multiple benchmarks (Maddison Project Database (2018)) ($)"
 # Make Time Series of Debt & Gdp objects
 gdpts <- ts(RealGrowth$GDPC96, start = c(1947,1),frequency = 4)
 dts <- ts(DebtToNw$NCBCMDPNWMV, start = c(1951,4),frequency = 4)
+gdpCAP <- ts(RgdpPerCAPITA$GDPCAP, start = c(1800,1),frequency = 1)
 
+#LongRun growth
+ts.plot(gdpCAP)
+abline(v =1984)
+abline(v =1945)
+abline(v =1880)
+abline(v =1930)
 # Switch to LOG(GDP)
 gts<-log(gdpts)
 
@@ -373,7 +381,22 @@ library(strucchange)
       lines(bp.debt2)
     ##
 
-
+    ## Rgdp Per CAPITA ##
+      #gdpCAP
+      fs.gpercap <- Fstats(gdpCAP ~ 1)
+      plot(fs.gpercap)
+      breakpoints(fs.gpercap)
+      plot(gdpCAP)
+      lines(breakpoints(fs.gpercap))
+      bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 3)
+      summary(bp.gpercap)
+      fmg0 <- lm(gdpCAP ~ 1)
+      fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
+      plot(gdpCAP)
+      lines(ts(fitted(fmg0), start=c(1800)), col = 3)
+      lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+      lines(bp.gpercap)
+      # 
 
 
 # SVAR --------------------------------------------------------------------
