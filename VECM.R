@@ -1,5 +1,6 @@
 setwd("C:/Users/Ferdi/Documents/R/C5")
 library(tseries)
+library(stats)
 # Read data
 RealGrowth <- read.csv("Z1_RGDP_3Dec_GDPC96.csv", head = TRUE, sep=",")
 DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
@@ -7,9 +8,32 @@ DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.c
 RgdpPerCAPITA <- read.csv("RGDPperCAPITA.csv", skip = 4, head = TRUE, sep=",")
 "Real GDP per capita in 2011US$, multiple benchmarks (Maddison Project Database (2018)) ($)"
 # Make Time Series of Debt & Gdp objects
+
 gdpts <- ts(RealGrowth$GDPC96, start = c(1947,1),frequency = 4)
 dts <- ts(DebtToNw$NCBCMDPNWMV, start = c(1951,4),frequency = 4)
 gdpCAP <- ts(RgdpPerCAPITA$GDPCAP, start = c(1800,1),frequency = 1)
+
+#Compute LOG(GDP)
+  LogRgdp<-log(gdpts)
+#Compute Rgdp Growth RATE
+  G_RATE <- ((diff(gdpts, lag=1, differences = 1)/lag(gdpts,-1)))
+  GCAP_RATE <- ((diff(gdpCAP, lag=1, differences = 1)/lag(gdpCAP,-1)))
+#AGGREGATE Quaterly to YEARLY Rgdp
+  Ygdp <- aggregate(gdpts,nfrequency = 1, FUN = sum)
+  Ygdp_RATE <- ((diff(Ygdp, lag=1, differences = 1)/lag(Ygdp,-1)))
+#PLOTS
+  ts.plot(gdpts)
+  ts.plot(G_RATE)
+  abline(h=0)
+  abline(v=2003.75, col="grey50")
+  abline(h=0.0125, col="red")
+  
+  plot.default(G_RATE, type = "h")
+  plot.default(Ygdp_RATE, type = "h")
+  plot.default(GCAP_RATE, type = "h")
+  ts.plot(LogRgdp)
+  ts.plot(Ygdp)
+  
 
 #LongRun growth
 ts.plot(gdpCAP)
@@ -17,11 +41,10 @@ abline(v =1984)
 abline(v =1945)
 abline(v =1880)
 abline(v =1930)
-# Switch to LOG(GDP)
-gts<-log(gdpts)
+
 
 # Bind the series into a list
-vniveau<-ts.intersect(gts,dts,lag(gts,k=-1),lag(dts,lag=-1))
+vniveau<-ts.intersect(LogRgdp,dts,lag(LogRgdp,k=-1),lag(dts,lag=-1))
 ####     vlog<-log(vniveau)
 vdiff_niveau<-diff(vniveau)
 ####     vdiff_log<-diff(vlog)
@@ -30,11 +53,11 @@ vdiff_2_niveau<-diff(vniveau,k=2)
 gd2<-vdiff_2_niveau[,1]
 ts.plot(dts)
 ts.plot(gdpts)
-ts.plot(gts)
+ts.plot(LogRgdp)
 ts.plot(gd2)
 # plot level & Diff-lev
 par(mfrow=c(2,2))
-ts.plot(g<-vniveau[,1], ylab="RGDP (log)")
+ts.plot(LogRgdp<-vniveau[,1], ylab="RGDP (log)")
 ts.plot(dnw<-vniveau[,2], ylab="Debt/net worth (level)")
 # plot of diff_Debt_level is informative of
 # the transformation in debt dynamics occuring from mid 1980's
@@ -57,7 +80,7 @@ ts.plot(dnwd<-vdiff_niveau[,2], ylab="Debt/net worth (diff.)")
   #2-KPSS:  Ho=stat.
 
 # LEVELS
-adf.test(g)
+adf.test(LogRgdp)
 adf.test(gd)
 adf.test((dnw))
 adf.test((dnwd))
@@ -75,7 +98,7 @@ adf.test((dnwd))
 # Phillips-Perron test for stationarity
 # Ho: non-stat.
   #LEVEL
-    pp.test(g, type = "Z(t_alpha)")
+    pp.test(LogRgdp, type = "Z(t_alpha)")
     pp.test(dnw, type = "Z(t_alpha)")
   #Diff
     pp.test(gd, type = "Z(t_alpha)")
@@ -90,7 +113,7 @@ library(urca)
   # see Elliot & al. (1996, p.825) for Critical values (-3.46 at 1% here)
   # Ho=non-stat.
   #Level
-    ur.ers(g, model="const")
+    ur.ers(LogRgdp, model="const")
     ur.ers(dnw)
   #Diff
     ur.ers(gd,model="trend")
@@ -107,7 +130,7 @@ library(urca)
 
 #2- KPSS  # Ho: stationnarity
   #Level
-    kpss.test(g,null = "Trend")
+    kpss.test(LogRgdp,null = "Trend")
     kpss.test(dnw,null = "Trend") #both reject Ho of stat.
   #Diff no-trend
     kpss.test(gd) # Growth not diff-stat. --> try including a trend:
@@ -148,8 +171,8 @@ library(urca)
   
   #Phillips Ouliaris test  # Ho: no cointegrat?
     # LEVELS
-      po.test(cbind(g,dnw), demean = T, lshort = T)      #  NO COINT
-      po.test(cbind(dnw,g), demean = T, lshort = T) # idem the other way round
+      po.test(cbind(LogRgdp,dnw), demean = T, lshort = T)      #  NO COINT
+      po.test(cbind(dnw,LogRgdp), demean = T, lshort = T) # idem the other way round
      ### RESULTS:  NO Cointegration
       
       ####         # LOG
@@ -167,19 +190,19 @@ library(urca)
       ####              # NO COINT in log ##
       
     #MAX
-      jojolevel<-ca.jo(cbind(g,dnw),ecdet="const") #,type="trace")
+      jojolevel<-ca.jo(cbind(LogRgdp,dnw),ecdet="const") #,type="trace")
       summary(jojolevel)
      # Ho: "no cointeg?" is rejected at 1% --> possible cointeg? for r<=1
           #  for r<=1: tstat < crit.val. --> cointegration btw (x+1) variables
     #TRACE
-       jojolevTrace<-ca.jo(cbind(g,dnw),ecdet="const",type="trace")
+       jojolevTrace<-ca.jo(cbind(LogRgdp,dnw),ecdet="const",type="trace")
       summary(jojolevTrace)
      ## RESULTS: Cointegration
 #
 
 #Test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
   #LEVEL
-    jojoStruct <- cajolst(cbind(g,dnw))
+    jojoStruct <- cajolst(cbind(LogRgdp,dnw))
     summary(jojoStruct)
     slot(jojoStruct, "bp")
     slot(jojoStruct, "x")
@@ -278,7 +301,7 @@ library(strucchange)
       #
       #Type= CUMsum
         #Log(RGDP) & narrowing data range from 1973 on...
-          post73<-window(g,start=1974)
+          post73<-window(LogRgdp,start=1974)
           efpCum_g73 <- efp(post73 ~ 1)
           plot(efpCum_g73)
           ### logRGDP BREAK in 1984   ###
@@ -320,16 +343,16 @@ library(strucchange)
   
     ## GROWTH ##
       #LOG-rgdp
-        fs.growth <- Fstats(g ~ 1)
+        fs.growth <- Fstats(LogRgdp ~ 1)
         plot(fs.growth)
         breakpoints(fs.growth)
-        plot(g)
+        plot(LogRgdp)
         lines(breakpoints(fs.growth))
-        bp.growth <- breakpoints(g ~ 1,breaks = 1)
+        bp.growth <- breakpoints(LogRgdp ~ 1,breaks = 1)
         summary(bp.growth)
-        fmg0 <- lm(g ~ 1)
-        fmgf <- lm(g ~ breakfactor(bp.growth))#,breaks = 1))
-        plot(g)
+        fmg0 <- lm(LogRgdp ~ 1)
+        fmgf <- lm(LogRgdp ~ breakfactor(bp.growth))#,breaks = 1))
+        plot(LogRgdp)
         lines(ts(fitted(fmg0), start=c(1951)), col = 3)
         lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
         lines(bp.growth)
@@ -352,7 +375,7 @@ library(strucchange)
         lines(bp.gdpts)
       #  
       ##Sample OUT of 2007 crisis##
-        g2007<-window(g,start=1952,end=2008)
+        g2007<-window(LogRgdp,start=1952,end=2008)
         bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
         summary(bp.growth2007)
         fmg0 <- lm(g2007 ~ 1)
@@ -388,21 +411,25 @@ library(strucchange)
       breakpoints(fs.gpercap)
       plot(gdpCAP)
       lines(breakpoints(fs.gpercap))
-      bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 3)
-      summary(bp.gpercap)
-      fmg0 <- lm(gdpCAP ~ 1)
-      fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
-      plot(gdpCAP)
-      lines(ts(fitted(fmg0), start=c(1800)), col = 3)
-      lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
-      lines(bp.gpercap)
+      ##Modulating the number of BP...
+        bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 5)
+        summary(bp.gpercap)
+        fmg0 <- lm(gdpCAP ~ 1)
+        fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
+        plot(gdpCAP)
+        lines(ts(fitted(fmg0), start=c(1800)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+        lines(bp.gpercap)
       # 
 
 
 # SVAR --------------------------------------------------------------------
 
 
-myvar <- data.frame(growth=g, debt=dnw)
+##LOG-rgdp
+  myvar <- data.frame(growth=LogRgdp, debt=dnw)
+##LEVEL-rgdp
+  myvar <- data.frame(growth=window(gdpts,start=c(1951,4),end=c(2016,3)), debt=dnw)        
 library(urca)
 library(vars)
 # --------------------------------------------------------------------------- #
@@ -460,7 +487,8 @@ roots(GvarD.new)
           # NOT the other way round
           # CONTRADICT Lavoie & Secca results
 #1983-->2016
-  datapostBP <- data.frame(gpostBP=vniveaupostBpt[,1], dpostBP=vniveaupostBpt[,2])
+  ##OLD  datapostBP <- data.frame(gpostBP=vniveaupostBpt[,1], dpostBP=vniveaupostBpt[,2])
+  datapostBP <- data.frame(gpostBP=window(gdpts,start=1983,end=2016), dpostBP=vniveaupostBpt[,2])
   VARselect(datapostBP, lag.max = 6, type = "both")
     # SC --> 2 lags
   varpostBP <- VAR(datapostBP, p = 2, type = "both")
@@ -484,6 +512,7 @@ print(causality(varLS, cause="dLS"))
 # L&Secca results are partially confirmed :
   # no causality from G --> D
   # nor the o-w-round
+  # not simulataneous causality
 
 # REMEMBER AND TRY CANADA DATA !!!
 
@@ -550,12 +579,12 @@ dev.off()
 
 # set list for Alternative regression fits
 #1 #2  #3            #4
-vbn21<-ts.intersect(g,gd,lag(g,k=-1),lag(gd,k=-1))
+vbn21<-ts.intersect(LogRgdp,gd,lag(LogRgdp,k=-1),lag(gd,k=-1))
 vbn22<-ts.intersect(gl,gld,lag(gl,k=-1),lag(gld,k=-1))
 #1  #2   #3            #4
 
 ### REcursive CUMSUM
-efpCum_g <- efp(g ~ 1)     #vbn21[,1]
+efpCum_g <- efp(LogRgdp ~ 1)     #vbn21[,1]
 plot(efpCum_g)  # break in 1973 oil crisis
 
 
@@ -619,7 +648,7 @@ plot(gl)
 lines(ts(fitted(fmg0), start=c(1951)), col = 3)
 lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
 lines(Lbp.growth)
-####################################  window(g,start=1952,end=2008)
+####################################  window(LogRgdp,start=1952,end=2008)
 gl2007<-window(gl,start=1955,end=2008)
 bp.growthl2007 <- breakpoints(gl2007 ~ 1,breaks = 1)
 summary(bp.growthl2007)
