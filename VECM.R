@@ -1,4 +1,6 @@
 setwd("C:/Users/Ferdi/Documents/R/C5")
+setwd("C:/Users/fouwe/Documents/R/C5")
+
 library(tseries)
 library(stats)
 # Read data
@@ -21,16 +23,22 @@ gdpCAP <- ts(RgdpPerCAPITA$GDPCAP, start = c(1800,1),frequency = 1)
 #AGGREGATE Quaterly to YEARLY Rgdp
   Ygdp <- aggregate(gdpts,nfrequency = 1, FUN = sum)
   Ygdp_RATE <- ((diff(Ygdp, lag=1, differences = 1)/lag(Ygdp,-1)))
+#MOBILE AVERAGE
+  library(TTR)
+  malevel<-12
+  moymob<-TTR::SMA(G_RATE,malevel)
+  
 #PLOTS
-  ts.plot(gdpts)
-  ts.plot(G_RATE)
+  ts.plot(gdpts, ylab="Q-RGDP (Level)")
+  ts.plot(G_RATE, ylab="Q-Growth (Level)")
   abline(h=0)
   abline(v=2003.75, col="grey50")
   abline(h=0.0125, col="red")
-  
+  ts.plot(moymob, type = "h", ylab=paste0("SMA-",malevel," :Q-Growth (Level)"))
   plot.default(G_RATE, type = "h")
   plot.default(Ygdp_RATE, type = "h")
   plot.default(GCAP_RATE, type = "h")
+  abline(v=1983.75, col="grey50")
   ts.plot(LogRgdp)
   ts.plot(Ygdp)
   
@@ -57,7 +65,7 @@ ts.plot(LogRgdp)
 ts.plot(gd2)
 # plot level & Diff-lev
 par(mfrow=c(2,2))
-ts.plot(LogRgdp<-vniveau[,1], ylab="RGDP (log)")
+ts.plot(LogRgdp<-vniveau[,1], ylabflibra="RGDP (log)")
 ts.plot(dnw<-vniveau[,2], ylab="Debt/net worth (level)")
 # plot of diff_Debt_level is informative of
 # the transformation in debt dynamics occuring from mid 1980's
