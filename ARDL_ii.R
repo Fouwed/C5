@@ -114,6 +114,9 @@ data_list<- ts.intersect(log(inv5),capu1,log(profit1),
 # ++ ALTERNATIVE --->  FinInvHistRatio
   data_list<- ts.intersect(log(inv5),capu1,log(profit1),
                            (FinInvHistRatio),log(IntInv),dbtnw)
+# ++ ALTERNATIVE --->  Fii = FinInv + IntInv
+  data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                           ((FinInv+IntInv)/AssetTot),log(FinInv+IntInv),dbtnw)  
   
   
 #Create LIST of 5X5 variables (i-u-r-Fi-D)x(level-diff-lagLevel-2xlagDiff)
@@ -666,27 +669,41 @@ Summary(model1)
 #### 1952 - 2016
 
 #Create dataframe for compatibility with ARDL PACKAGE Funct?
-  #OLD: c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
+  #ALT1: c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
             #r=(ecmeq[,3]), fi = (ecmeq[,4]), d = ecmeq[,5])
-  ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
-                      r=(data_list[,3]), fi = (data_list[,4]),
-                      ii = data_list[,5], d = data_list[,6])
+  #ALT2:ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
+    #                     r=(data_list[,3]), fi = (data_list[,4]),
+    #                     ii = data_list[,5], d = data_list[,6])
 
+  #ALT3:Merging Fi & ii into Fii=total intangibles(financial+goodwill)
+
+#WATCHOUT : use alternatively lvldate according to sample PERIODs
+  #52-2015
+    data_list_w <- window(data_list,start=c(1952,1), end=c(2015,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1952,3), end=c(2017,4), frequency=4)
+  #52 - 2007
+    data_list_w <- window(data_list,start=c(1952,1), end=c(2008,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1952,3), end=c(2008,1), frequency=4)
+  #52 - 1982
+    data_list_w <- window(data_list,start=c(1952,1), end=c(1982,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1952,3), end=c(1987,1), frequency=4)
+  #1985 - 2016
+    data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1984,3), end=c(2019,4), frequency=4)
+  #1984 - 2008
+    data_list_w <- window(data_list,start=c(1980,1), end=c(2008,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1984,1), end=c(2008,1), frequency=4)
+
+    
+  ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
+                          r=(data_list_w[,3]), fii = data_list_w[,4])
+###
+  
 #1/2 ALTERN.
   #cdat<-ts(c5dat,start=c(1952,3), end=c(2016,4), frequency=4)
   #OLD: cdat<-ts(ardl_data,start=c(1952,3), end=c(2016,4), frequency=4)
 
-# WATCHOUT : use alternatively lvldate according to sample PERIODs
-  #52-2016
-    lvldata <- ts(ardl_data,start=c(1952,3), end=c(2016,4), frequency=4)
-  #52 - 2007
-    lvldata <- ts(ardl_data,start=c(1952,3), end=c(2008,1), frequency=4)
-  #52 - 1987
-    lvldata <- ts(ardl_data,start=c(1952,3), end=c(1987,1), frequency=4)
-  #1985 - 2016
-    lvldata <- ts(ardl_data,start=c(1987,1), end=c(2016,4), frequency=4)
-  #1984 - 2008
-    lvldata <- ts(ardl_data,start=c(1984,1), end=c(2008,1), frequency=4)
+
 
 # Write lvldata in CSV 
 write.csv(lvldata, file = "MyData.csv")
@@ -708,6 +725,15 @@ write.csv(lvldata, file = "MyData.csv")
   Alt1select1 <- ardl::auto.ardl(inv~u+r+fi+ii, data=lvldata, ymax=4,
                                  xmax=c(4,4,4,4),case=5,verbose = T,ic = "aic")
   #BEST for INTANGIBLES is ARDL(1,1,0,1,1)
+  
+#3rd. ALTERN. : Fii =Fin. + goodwill(unidentified)
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=lvldata, ymax=2,
+                                 xmax=c(4,4,4),case=1,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=lvldata, ymax=4,
+                                 xmax=c(4,4,4),case=3,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=8,
+                                 xmax=c(8,4,4),case=5,verbose = T,ic = "aic")
+  #BEST for Fii is ARDL(3,2,1,0) case 5
   
   
 #1952-2016#Best model is inv ~ +1 + L(inv, 1) + L(inv, 2) + L(inv, 3) +
@@ -804,6 +830,9 @@ c5select5 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
       ##Best FinInvHistRatio ++ Intangible ++ Debt
       retards<-c(3,1,0,0,0,1) 
       
+      ##Best Fii (no Debt
+      retards<-c(3,2,1,3) 
+      
 cas<- c(1,3,3,5,5)
 
 # 1st. Alternative : i~u.r.fi+ii  -->Case=5
@@ -819,6 +848,7 @@ ardl::bounds.test(mod)
 ardl::coint(mod)
 
 plot(mod)
+
 Box.test(mod$residuals,lag = 5, type="Ljung-Box",fitdf=sum(retards))
 car::ncvTest(mod)
 
@@ -850,8 +880,17 @@ shapiro.test(mod$residuals) #Royston (1995) to be adequate for p.value < 0.1.
       summary(Mod_ii_c3)
       bounds.test(Mod_ii_c3)
       coint(Mod_ii_c3)
-    
-  #NO Intanibles    
+      
+    #Fii INTANGIBLES = Fi+ii
+      #--> Best Model Selected previously: (3.2.1.3)
+      #Case 5
+      Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=1,
+                            xlag=c(1,0,0), case = 5)
+      summary(Mod_ii_c5)
+      bounds.test(Mod_ii_c5)
+      coint(Mod_ii_c5)
+      
+  #NO Intangibles    
               #1952-2016#
               cmacroa<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=2,
                                   xlag=c(8,3,1), case=5)
