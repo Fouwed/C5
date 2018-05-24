@@ -688,6 +688,8 @@ Summary(model1)
   #1984 - 2008
     lvldata <- ts(ardl_data,start=c(1984,1), end=c(2008,1), frequency=4)
 
+lvldata <- ardl_data[1:120,]
+
 # Write lvldata in CSV 
 write.csv(lvldata, file = "MyData.csv")
 
@@ -749,7 +751,7 @@ c5select1 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
 c5select3 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
                              xmax=c(4,4,4,4,4),case=3,verbose = T)
 c5select5 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
-                             xmax=c(4,4,4,4,9),case=5,verbose = T)
+                             xmax=c(4,4,4,4,4),case=5,verbose = T)
 
 
 #1952-2016
@@ -880,7 +882,7 @@ shapiro.test(mod$residuals) #Royston (1995) to be adequate for p.value < 0.1.
     #1984-2007 
     #Case 5
       Mod_ii_d_c5 <- ardl::ardl(inv~u+r+fi+ii+d, data=lvldata, ylag=1,
-                         xlag=c(1,0,0,1,1), case=5)
+                         xlag=c(1,0,0,1,0), case=5)
       summary(Mod_ii_d_c5)
       bounds.test(Mod_ii_d_c5)
       coint(Mod_ii_d_c5)
@@ -890,6 +892,14 @@ shapiro.test(mod$residuals) #Royston (1995) to be adequate for p.value < 0.1.
       summary(Mod_ii_d_c3)
       bounds.test(Mod_ii_d_c3)
       coint(Mod_ii_d_c3)  
+    #Case ?? merging Fi & ii into Fiii
+      Fiii <- fi+ii
+      Mod_Fi_ii_c5 <- ardl::ardl(inv~u+r+fi+ii, data=lvldata, ylag=3,
+                                xlag=c(1,0,0,0,4), case=5)
+      summary(Mod_Fi_ii_c5)
+      bounds.test(Mod_Fi_ii_c5)
+      coint(Mod_Fi_ii_c5)  
+      
               #1952-2016 - TOTAL FIN ASSETS --> COINT 5%
               #Case 1
               cmacroa1<-ardl::ardl(inv~u+r+fi+d, data=lvldata, ylag=4,
