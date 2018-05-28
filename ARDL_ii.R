@@ -354,7 +354,10 @@ VARselect((ecmeq[,6]),lag.max = 8, type = "both",
 # diff(profit)t + diff(fininv)t
 # min(SC=7.632944) : 2 lags for  diff(inv)
 
-
+VARselect((data_list[,1]),lag.max = 8, type = "both",
+          exogen = cbind(data_list[,2],data_list[,3]))
+VARselect((ardl_data[,"fii"]),lag.max = 8, type = "both",
+          exogen = cbind(ardl_data[,"u"],ardl_data[,"r"],ardl_data[,"etha"]))
 
 # -- round 2 --------------------------------------------------------------
 
@@ -691,7 +694,7 @@ data_list_w <- window(data_list,start=c(1952,1), end=c(2008,1), frequency=4)
 data_list_w <- window(data_list,start=c(1952,1), end=c(1982,1), frequency=4)
 #lvldata <- ts(ardl_data,start=c(1952,3), end=c(1987,1), frequency=4)
 #1985 - 2016
-data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
+data_list_w <- window(data_list,start=c(1982,1), end=c(2015,4), frequency=4)
 #lvldata <- ts(ardl_data,start=c(1984,3), end=c(2019,4), frequency=4)
 #1984 - 2008
 data_list_w <- window(data_list,start=c(1980,1), end=c(2008,1), frequency=4)
@@ -739,16 +742,20 @@ Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=8,
                                xmax=c(8,4,4),case=5,verbose = T,ic = "aic")
 #BEST for Fii is ARDL(3,2,1,0) case 5
 
+
+
+
 #4th. ALTERN. : CROISS=Fii=f(u,r,etha)
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=lvldata, ymax=2,
-                               xmax=c(4,4,4),case=1,verbose = T,ic = "aic")
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=lvldata, ymax=4,
-                               xmax=c(4,4,4),case=3,verbose = T,ic = "aic")
-Alt1select1 <- ardl::auto.ardl(fii~u+r+etha, data=ardl_data, ymax=8,
-                               xmax=c(8,4,4),case=5,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(fii~u+r+etha, data=ardl_data, ymax=8,
+                                 xmax=c(12,8,8),case=5,verbose = T,ic = "aic")
 #BEST for Fii is ARDL(3,2,1,0) case 5
 
-
+  
+  
+  
+  VARselect((ardl_data[,"fii"]),lag.max = 8, type = "both",
+            exogen = cbind(ardl_data[,"u"],ardl_data[,"r"],ardl_data[,"etha"]))
+  
 #1952-2016#Best model is inv ~ +1 + L(inv, 1) + L(inv, 2) + L(inv, 3) +
 # L(inv, 4) + u + L(u, 1) + r + L(r, 1) +
 # L(r, 2) + fi + L(fi, 1)
@@ -862,7 +869,7 @@ ardl::coint(mod)
 
 plot(Mod_sos)
 
-Box.test(Mod_sos$residuals,lag = 5, type="Ljung-Box",fitdf=sum(retards))
+Box.test(Mod_sos$residuals,lag = 5, type="Ljung-Box",fitdf=sum(2))
 car::ncvTest(Mod_sos)
 
 qqnorm(Mod_sos$residuals)
@@ -903,13 +910,36 @@ summary(Mod_ii_c5)
 bounds.test(Mod_ii_c5)
 coint(Mod_ii_c5)
 
+
+
 #CROISS=Fii 
-#Case 5
-Mod_sos<-ardl::ardl(fii ~ -1+u+r+etha, data=ardl_data, ylag=1,
-                    xlag=c(6,0,4), case = 5)
-summary(Mod_sos)
-bounds.test(Mod_sos)
-coint(Mod_sos)
+
+  Mod_sos<-ardl::ardl(fii ~ -1+u+r+etha, data=ardl_data, ylag=2,
+                      xlag=c(10,0,9), case = 5)
+  summary(Mod_sos)
+  bounds.test(Mod_sos)
+  coint(Mod_sos)
+
+  # I.I.D TESTS
+    Box.test(Mod_sos$residuals,lag = 9, type="Ljung-Box",fitdf=4)
+      #Ho:INDEPENDANT 
+    
+    shapiro.test(Mod_sos$residuals) #Royston (1995) to be adequate for p.value < 0.1.
+      #Ho:nORMALITY
+    
+    car::ncvTest(Mod_sos)
+      #Ho:constant error variance
+
+  
+  qqnorm(Mod_sos$residuals)
+  qqline(Mod_sos$residuals)  
+  bgtest(Mod_sos$residuals)
+  
+  boxplot(Mod_sos$residuals)
+  hist(Mod_sos$residuals)
+  shapiro.test(Mod_sos$residuals) #Royston (1995) to be adequate for p.value < 0.1.
+
+
 
 #NO Intangibles    
 #1952-2016#
@@ -978,3 +1008,8 @@ cmacrodlog<-ardl::ardl(inv~u+r+fi+d, data=lvldata, ylag=1,
 ######## WALD TEST OK -->  long run relationship btw i~u.r.fi+DEBT ###
 ardl::bounds.test(mod)
 ardl::coint(ArdlRatioAlt1)
+
+
+# Endogeneity -------------------------------------------------------------
+
+cor()
