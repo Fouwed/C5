@@ -1,4 +1,6 @@
 setwd("C:/Users/Ferdi/Documents/R/C5")
+setwd("C:/Users/fouwe/Documents/R/C5")
+
 library(tseries)
 library(stats)
 # Read data
@@ -422,6 +424,23 @@ library(strucchange)
         lines(bp.gpercap)
       # 
 
+    ## Rgdp Growth RATE ##
+    #gdpCAP
+    fs.g_rate <- Fstats(G_RATE ~ 1)
+    plot(fs.g_rate)
+    breakpoints(fs.g_rate)
+    plot(G_RATE)
+    lines(breakpoints(fs.g_rate))
+    ##Modulating the number of BP...
+    bp.g_rate <- breakpoints(G_RATE ~ 1,breaks = 5)
+    summary(bp.g_rate)
+    fmg0 <- lm(G_RATE ~ 1)
+    fmgf <- lm(G_RATE ~ breakfactor(bp.g_rate))#,breaks = 1))
+    plot(G_RATE)
+    lines(ts(fitted(fmg0), start=c(1800)), col = 3)
+    lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+    lines(bp.g_rate)
+    # 
 
 # SVAR --------------------------------------------------------------------
 
