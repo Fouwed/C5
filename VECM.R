@@ -173,6 +173,7 @@ library(urca)
 
 
 
+    
 ### COINTEGRAT? #####
 
   #Elliot &. also have cointegr?
@@ -229,7 +230,7 @@ library(urca)
   #RESAMPLE
     #LEVEL
       vniveaupostBpt <- window(vniveau,start=1983,end=2016)
-      vniveauante <- window(vniveau,start=1951,end=1985)
+      vniveauante <- window(vniveau,start=1951,end=1983)
       vniveaubtwn <- window(vniveau,start=1985,end=2007)
       ####                #LOG
       ####                  vlogpostBpt <- window(vlog,start=1983,end=2016)
@@ -244,7 +245,7 @@ library(urca)
         po.test(vniveaupostBpt[,2:1], demean = T, lshort = T) # idem the other way round
         ## RESULTS:  NO Cointegration
     #JOHANSEN
-        jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+        jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="trend",type="trace") #,type="trace")
         summary(jojopostBpt)
       ##RESULTS: COINT at 1% from 1983 on !!!
       #           i.e one may estimate a VECM for G&D
@@ -265,10 +266,10 @@ library(urca)
       po.test(vniveauante[,(1:2)], demean = T, lshort = T)      # No COINT
       po.test(vniveauante[,2:1], demean = T, lshort = T) # neither the other way round
       #Johansen
-      jojoAnteTrace<-ca.jo(vniveauante[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      jojoAnteTrace<-ca.jo(vniveauante[,(1:2)],ecdet="trend",type="trace") #,type="trace")
       summary(jojoAnteTrace)
       ###  5% COINT 
-      jojoAnteMax<-ca.jo(vniveau[,(1:2)],ecdet="const") #,type="trace")
+      jojoAnteMax<-ca.jo(vniveau[,(1:2)],ecdet="trend") #,type="trace")
       summary(jojoAnteMax)
       ###  1% COINT 
       
@@ -286,10 +287,23 @@ library(urca)
         po.test(vniveaubtwn[,(1:2)], demean = T, lshort = T)      # No COINT
         po.test(vniveaubtwn[,2:1], demean = T, lshort = T) # neither the other way round
         #Johansen
-        jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const",type="trace") #,type="trace")
+        jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="trend",type="trace") #,type="trace")
         summary(jojoBTW)
        ###  COINT 
       
+        
+#Test the 1983-2016 period for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
+  #LEVEL
+  jojoStr2007 <- cajolst(vniveaupostBpt[,1:2])
+  summary(jojoStr2007)
+    slot(jojoStr2007, "bp")
+    slot(jojoStr2007, "x")
+    slot(jojoStr2007, "x")[101] # corrsponding to 2008:1
+## RESULTS: Cointegration is confirmed after data readjustment for break (2008,1)
+  #         i.e no worry about 2008 financial crisis
+    
+        
+        
 
 library(strucchange)
 
@@ -305,13 +319,15 @@ library(strucchange)
           efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
             # 0.053 --> 3 years
           plot(efpMo_rgdp)
-        ### RGDP BREAK in early 1980's   ##
+          abline(v=1983.75, col="grey50")
+        ### RGDP BREAK in 1983   ##
       #
       #Type= CUMsum
         #Log(RGDP) & narrowing data range from 1973 on...
           post73<-window(LogRgdp,start=1974)
           efpCum_g73 <- efp(post73 ~ 1)
           plot(efpCum_g73)
+          abline(v=1984.00, col="grey50")
           ### logRGDP BREAK in 1984   ###
       #
     ## DEBT ##
@@ -319,7 +335,10 @@ library(strucchange)
         efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
         # 0.053 --> 3 years
         plot(efpMo_d)
-      # BREAK in 1973 then mid 1980's for dnw   #
+         abline(v=1965.75, col="grey50")
+         abline(v=1984.75, col="grey50")
+        
+      # BREAK in 1965 then 1984 for dnw   #
     
       ### type= Recursive-CUMSUM
         efpReCum_d <- efp(dnw ~ 1)
@@ -356,52 +375,52 @@ library(strucchange)
         breakpoints(fs.growth)
         plot(LogRgdp)
         lines(breakpoints(fs.growth))
-        bp.growth <- breakpoints(LogRgdp ~ 1,breaks = 4)
+        bp.growth <- breakpoints(LogRgdp ~ 1,breaks = 1)
         summary(bp.growth)
         fmg0 <- lm(LogRgdp ~ 1)
         fmgf <- lm(LogRgdp ~ breakfactor(bp.growth),breaks = 4)
         plot(LogRgdp)
-        lines(ts(fitted(fmg0), start=c(1947)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1947), frequency = 4), col = 4)
+        lines(ts(fitted(fmg0), start=c(1951.75)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1951.75), frequency = 4), col = 4)
         lines(bp.growth)
-      #LOG-rgdp PPOST 1973
-        bp.growth <- breakpoints(post73 ~ 1,breaks = 4)
-        summary(bp.growth)
-        fmg0 <- lm(post73 ~ 1)
-        fmgf <- lm(post73 ~ breakfactor(bp.growth),breaks = 4)
-        plot(post73)
-        lines(ts(fitted(fmg0), start=c(1974)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1974), frequency = 4), col = 4)
-        lines(bp.growth)
-      # 
-      #RGDP
-        fs.gdpts <- Fstats(gdpts ~ 1)
-        plot(fs.gdpts)
-        breakpoints(fs.gdpts)
-        plot(gdpts)
-        lines(breakpoints(fs.gdpts))
-        ##Break: 1989.1
-        #
-        bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
-        summary(bp.gdpts)
-        fmg0 <- lm(gdpts ~ 1)
-        fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
-        plot(gdpts)
-        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-        lines(bp.gdpts)
-      #  
-      ##Sample OUT of 2007 crisis##
-        g2007<-window(LogRgdp,start=1952,end=2008)
-        bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
-        summary(bp.growth2007)
-        fmg0 <- lm(g2007 ~ 1)
-        fmgf <- lm(g2007 ~ breakfactor(bp.growth2007))#,breaks = 1))
-        plot(g2007)
-        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-        lines(bp.growth2007)
-      #
+                      #LOG-rgdp PPOST 1973
+                        bp.growth <- breakpoints(post73 ~ 1,breaks = 4)
+                        summary(bp.growth)
+                        fmg0 <- lm(post73 ~ 1)
+                        fmgf <- lm(post73 ~ breakfactor(bp.growth),breaks = 4)
+                        plot(post73)
+                        lines(ts(fitted(fmg0), start=c(1974)), col = 3)
+                        lines(ts(fitted(fmgf), start = c(1974), frequency = 4), col = 4)
+                        lines(bp.growth)
+                      # 
+                      #RGDP
+                        fs.gdpts <- Fstats(gdpts ~ 1)
+                        plot(fs.gdpts)
+                        breakpoints(fs.gdpts)
+                        plot(gdpts)
+                        lines(breakpoints(fs.gdpts))
+                        ##Break: 1989.1
+                        #
+                        bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
+                        summary(bp.gdpts)
+                        fmg0 <- lm(gdpts ~ 1)
+                        fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
+                        plot(gdpts)
+                        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+                        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+                        lines(bp.gdpts)
+                      #  
+                      ##Sample OUT of 2007 crisis##
+                        g2007<-window(LogRgdp,start=1952,end=2008)
+                        bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
+                        summary(bp.growth2007)
+                        fmg0 <- lm(g2007 ~ 1)
+                        fmgf <- lm(g2007 ~ breakfactor(bp.growth2007))#,breaks = 1))
+                        plot(g2007)
+                        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+                        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+                        lines(bp.growth2007)
+                      #
 
     ## DEBT ##
       fs.debt2 <- Fstats(dnw ~ 1)
@@ -438,22 +457,22 @@ library(strucchange)
         lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
         lines(bp.gpercap)
         
-      #LOGgdpCAP
-        fs.lgpercap <- Fstats(log(gdpCAP) ~ 1)
-        plot(fs.lgpercap)
-        breakpoints(fs.lgpercap)
-        plot(log(gdpCAP))
-        lines(breakpoints(fs.lgpercap))
-        ##Modulating the number of BP...
-        bp.lgpercap <- breakpoints(log(gdpCAP) ~ 1,breaks = 5)
-        summary(bp.lgpercap)
-        fmg0 <- lm(log(gdpCAP) ~ 1)
-        fmgf <- lm(log(gdpCAP) ~ breakfactor(bp.lgpercap))#,breaks = 1))
-        plot(log(gdpCAP))
-        lines(ts(fitted(fmg0), start=c(1800)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
-        lines(bp.lgpercap)
-      # 
+                #LOGgdpCAP
+                  fs.lgpercap <- Fstats(log(gdpCAP) ~ 1)
+                  plot(fs.lgpercap)
+                  breakpoints(fs.lgpercap)
+                  plot(log(gdpCAP))
+                  lines(breakpoints(fs.lgpercap))
+                  ##Modulating the number of BP...
+                  bp.lgpercap <- breakpoints(log(gdpCAP) ~ 1,breaks = 5)
+                  summary(bp.lgpercap)
+                  fmg0 <- lm(log(gdpCAP) ~ 1)
+                  fmgf <- lm(log(gdpCAP) ~ breakfactor(bp.lgpercap))#,breaks = 1))
+                  plot(log(gdpCAP))
+                  lines(ts(fitted(fmg0), start=c(1800)), col = 3)
+                  lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+                  lines(bp.lgpercap)
+                # 
 
 
 # SVAR --------------------------------------------------------------------
@@ -496,7 +515,7 @@ summary(GvarD, equation = "growth")
 # The moduli of the roots should all lie within the unit circle for the VAR to be stable
 # A stable VAR is stationary.
 roots(GvarD)
-# One of the roots is close to unity.
+# Two roots are close to unity.
 
 # since DEBT & GROWTH are coint (see 'jojopostBpt')
 # and the syst. ROOTS are close to 1
@@ -550,6 +569,28 @@ print(causality(varLS, cause="dLS"))
 # REMEMBER AND TRY CANADA DATA !!!
 
 # SVECM:  Growth --> Debt ---------------------------------------------------
+  vecm <- ca.jo(cbind(LogRgdp,dnw),ecdet="trend",K=2)
+    vecm <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="trend",K=2)
+  SR<-matrix(NA,nrow = 2,ncol = 2)
+  LR<-matrix(NA,nrow = 2,ncol = 2)
+  LR[1:2,2]<-0
+  SR
+  LR
+
+  svecm<-SVEC(vecm,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)  
+  svecm
+  svecm$SR
+  svecm$SR / svecm$SRse
+  svecm$LR
+  svecm$LR / svecm$LRse
+  
+  svecm.irf<-irf(svecm)
+  svecm.irf
+  plot(svecm.irf)
+  
+  fevd.U<-fevd(svecm, n.ahead = 148)$dnw
+  fevd.U
+  #
 
 
 
@@ -565,7 +606,7 @@ print(causality(varLS, cause="dLS"))
 
 
 
-
+# OLDIES ------------------------------------------------------------------
 
 
 # NOTE: The results for the reduced form VAR are not of much use beside
