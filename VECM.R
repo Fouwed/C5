@@ -3,6 +3,7 @@ setwd("C:/Users/fouwe/Documents/R/C5")
 
 library(tseries)
 library(stats)
+library(lmtest)
 # Read data
 RealGrowth <- read.csv("Z1_RGDP_3Dec_GDPC96.csv", head = TRUE, sep=",")
 DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
@@ -475,47 +476,78 @@ library(strucchange)
                 # 
 
 
-# SVAR --------------------------------------------------------------------
+# VAR --------------------------------------------------------------------
 
-
-##LOG-rgdp
-  myvar <- data.frame(growth=LogRgdp, debt=dnw)
-##LEVEL-rgdp
-  myvar <- data.frame(growth=window(gdpts,start=c(1951,4),end=c(2016,3)), debt=dnw)        
-library(urca)
-library(vars)
+              ##LOG-rgdp
+                myvar <- data.frame(growth=LogRgdp, debt=dnw)
+              ##LEVEL-rgdp
+                myvar <- data.frame(growth=window(gdpts,start=c(1951,4),end=c(2016,3)), debt=dnw)        
+  library(urca)
+  library(vars)
+   
+                
+  var_ts <- ts.intersect(LogRgdp, log(dbtnw))
+  
+  var_list <- window(var_ts,start=c(1952,1), end=c(2015,1), frequency=4)
+  var_list <- window(var_ts,start=c(1984,1), end=c(2008,1), frequency=4)
+  
+  var_data <- data.frame(gdp = (var_list[,1]), d=(var_list[,2]))
+  
 # --------------------------------------------------------------------------- #
 # ---------------------------- Reduced Form VAR ----------------------------- #
 
 ## Choose optimal length for unrestricted VAR
-VARselect(myvar, lag.max = 6, type = "both")
-  # SC --> 2 lags
+  VARselect(var_data, lag.max = 6, type = "both")
+    # SC & HQ --> 2 lags
+    # AIC & FPE --> 3 lags
+                  
+                  ## Order the 2 variables
+                  DcG <- myvar[, c("debt","growth")]
+                  GcD <- myvar[, c("growth","debt")]
 
-## Order the 2 variables
-DcG <- myvar[, c("debt","growth")]
-GcD <- myvar[, c("growth","debt")]
+## Estimate the VAR (for lag length 2 then 3)
+  ## Here "both" means we include a constant and a time trend
+  GvarD <- VAR(var_data, p = 2, type = "both")
+  GvarD <- VAR(var_data, p = 3, type = "both")
+  
+  
+                  ## See results (for now, no restrictions on PRIORITY. both RFVAR are symetric)
+                  DvarG
+                  GvarD
 
-## Estimate the VAR (for lag length 2)
-## Here "both" means we include a constant and a time trend
-DvarG <- VAR(DcG, p = 2, type = "both")
-GvarD <- VAR(GcD, p = 2, type = "both")
-## See results (for now, no restrictions on PRIORITY. both RFVAR are symetric)
-DvarG
-GvarD
+                  ## See more details.
+                  ## The variance-covariance matrix (and the correlation matrix)
+                  ## can be found at the very end (scroll down)
+                  summary(GvarD)
+                  
+                  ## See results for any equation in detail.
+                  summary(GvarD, equation = "growth")
+                  
+                  # Stability: see the roots of the companion matrix for the VAR
+                  # The moduli of the roots should all lie within the unit circle for the VAR to be stable
+                  # A stable VAR is stationary.
+                  roots(GvarD)
+                  # Two roots are close to unity.
+                  
 
-## See more details.
-## The variance-covariance matrix (and the correlation matrix)
-## can be found at the very end (scroll down)
-summary(GvarD)
+##### Residuals' Diagnostic tests ####
 
-## See results for any equation in detail.
-summary(GvarD, equation = "growth")
-
-# Stability: see the roots of the companion matrix for the VAR
-# The moduli of the roots should all lie within the unit circle for the VAR to be stable
-# A stable VAR is stationary.
-roots(GvarD)
-# Two roots are close to unity.
+  #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
+    serial.test(GvarD,lags.pt = 16,type = "PT.asymptotic")
+    serial.test(GvarD,lags.pt = 16,type = "PT.adjusted")
+    
+  #JB: Jarque-Bera tests and multivariate skewness 
+        # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
+    normality.test(GvarD)
+    # Non-norm.
+    
+  #ARCH: 
+    arch.test(GvarD,lags.multi = 5)
+    #Heteroscedastic resid.
+    
+  #Stability : Recursive CUMSUM
+    plot(stability(GvarD),nc=2)
+    #
 
 # since DEBT & GROWTH are coint (see 'jojopostBpt')
 # and the syst. ROOTS are close to 1
@@ -568,32 +600,250 @@ print(causality(varLS, cause="dLS"))
 
 # REMEMBER AND TRY CANADA DATA !!!
 
-# SVECM:  Growth --> Debt ---------------------------------------------------
-  vecm <- ca.jo(cbind(LogRgdp,dnw),ecdet="trend",K=2)
-    vecm <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="trend",K=2)
-  SR<-matrix(NA,nrow = 2,ncol = 2)
-  LR<-matrix(NA,nrow = 2,ncol = 2)
-  LR[1:2,2]<-0
-  SR
-  LR
 
-  svecm<-SVEC(vecm,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)  
-  svecm
-  svecm$SR
-  svecm$SR / svecm$SRse
-  svecm$LR
-  svecm$LR / svecm$LRse
+### VECM: (G,D) ####
+  vecm <- ca.jo(cbind(dnw,LogRgdp),ecdet="trend",K=2)
+  vecm <- ca.jo(var_data,ecdet="trend",K=3)
+  vecm.r1<-cajorls(vecm,r=1)
+  alpha<-coef(vecm.r1$rlm)[1,]
+  beta<-vecm.r1$beta
+  resids<-resid(vecm.r1$rlm)
+  N<-nrow(resids)
+  sigma<-crossprod(resids)/N
+  
+  #alpha t-stats  
+    alpha.se<-sqrt(solve(crossprod(cbind(vecm@ZK %*% beta,
+                          vecm@Z1))) [1,1]*diag(sigma))
+    alpha.t<-alpha/alpha.se
+    
+  #beta t-stats  
+    beta.se<-sqrt(diag(kronecker(solve(crossprod(vecm@RK [,-1])),
+                        solve(t(alpha) %*% solve(sigma) %*% alpha))))
+    beta.t<-c(NA,beta[-1]/beta.se)
+    
+  #Display alpha & beta (with respect. t-stat) 
+    alpha
+    alpha.t
+    beta
+    beta.t
+    
+# SVECM:  Growth --> Debt ---------------------------------------------------
+  #SVECM
+    vecm <- ca.jo(cbind(LogRgdp,dnw),ecdet="trend",K=2)
+      vecm <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="trend",K=2)
+        vecm <- ca.jo(var_data,ecdet="trend",K=3)
+    
+    SR<-matrix(NA,nrow = 2,ncol = 2)
+    LR<-matrix(NA,nrow = 2,ncol = 2)
+    LR[1:2,2]<-0
+    SR
+    LR
+
+    svecm<-SVEC(vecm,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)  
+    svecm
+    svecm$SR
+    #t-stat
+    svecm$SR / svecm$SRse
+    svecm$LR
+    svecm$LR / svecm$LRse
   
   svecm.irf<-irf(svecm)
   svecm.irf
   plot(svecm.irf)
   
-  fevd.U<-fevd(svecm, n.ahead = 148)$dnw
-  fevd.U
+  fevd.d <- fevd(svecm, n.ahead = 148)$dbtnw
+  fevd.d
   #
 
+  
 
+# SVECM : Y=(rgdp, ii, d, r) ----------------------------------------------
 
+  #Consider 4 alternative specif°
+    # 1-demand/supply seting relation (D=debt ; S=TotInv)  
+      data_vecm1 <- ts.intersect(LogRgdp,
+                                 (diff(IntInv+FinInv)/(IntInv+FinInv)), 
+                                 (dbtnw),log(inv5))
+    # 2-Etha (REMEMBER AND CHANGE Fii to ETHA)
+      data_vecm1 <- ts.intersect(LogRgdp, (FinInv+IntInv)/(ProInv+IntInv+FinInv),
+                                 dbtnw,log(inv5))
+      
+    # 3-FAP  
+      data_vecm1 <- ts.intersect(LogRgdp,log(FinInv+IntInv), dbtnw,log(FAP))
+      
+    # 4-S&P INDEX  
+      data_vecm1 <- ts.intersect(LogRgdp,log(FinInv+IntInv), dbtnw,log(INDEX)) 
+    
+    # 5-Investment & Profit  
+      data_vecm1 <- ts.intersect(log(inv5),(log(FinInv+IntInv)), 
+                                 log(dbtnw),log(profit1))
+      
+  #WATCHOUT : use alternatively data_list_w according to sample PERIODs
+    
+    #52-2015
+    data_list_w <- window(data_vecm1,start=c(1952,1), end=c(2015,1), frequency=4)
+
+    #52 - 2007
+    data_list_w <- window(data_vecm1,start=c(1952,1), end=c(2008,1), frequency=4)
+
+    #52 - 1982
+    data_list_w <- window(data_vecm1,start=c(1952,1), end=c(1982,1), frequency=4)
+
+    #1985 - 2016
+    data_list_w <- window(data_vecm1,start=c(1980,1), end=c(2015,4), frequency=4)
+
+    #1984 - 2008
+    data_list_w <- window(data_vecm1,start=c(1984,1), end=c(2008,1), frequency=4)
+  
+    
+    
+    vecm_data <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
+                            d=(data_list_w[,3]), inv = data_list_w[,4])
+    
+    
+  # Descript. analysis
+    summary(data_list_w)
+    plot(data_list_w, nc=2)
+    plot(vecm_data, nc=2)
+   
+  # Stationnarity tests
+    summary(ur.df(vecm_data[,"gdp"],type = "trend", lags = 2))
+      # Value of test-statistic is: -1.3864 while 
+        # Critical values = tau3 -3.98 -3.42 -3.13 
+    summary(ur.df(diff(vecm_data[,"gdp"]),type = "drift", lags = 1))
+      # Value of test-statistic is: -8.2791 while 
+        # Critical values = tau2 -3.44 -2.87 -2.57
+    summary(ur.df(vecm_data[,"fii"],type = "drift", lags = 1))
+      # Value of test-statistic is: -0.6672 while 
+        # Critical values = tau2 -3.44 -2.87 -2.57
+    summary(ur.df(diff(vecm_data[,"fii"]),type = "none", lags = 0))
+      # Value of test-statistic is: -13.6779 while 
+        # Critical values = tau1 -2.58 -1.95 -1.62
+    
+    
+    #1- ADF:  Ho=non-stat.  H1= diff-stat.
+      adf.test(vecm_data[,"gdp"])
+      adf.test(vecm_data[,"fii"])
+      adf.test(vecm_data[,"d"])
+      adf.test(vecm_data[,"inv"])
+      
+      adf.test(diff(vecm_data[,"gdp"]))
+      adf.test(diff(vecm_data[,"fii"]))
+      adf.test(diff(vecm_data[,"d"]))
+      adf.test(diff(vecm_data[,"inv"]))
+      
+    #2-KPSS:  Ho=stat.
+      kpss.test(vecm_data[,"inv"])
+      kpss.test(vecm_data[,"d"])
+      kpss.test(vecm_data[,"fii"])
+      kpss.test(vecm_data[,"gdp"])
+      
+      kpss.test(diff(vecm_data[,"inv"]))
+      kpss.test(diff(vecm_data[,"d"]))
+      kpss.test(diff(vecm_data[,"fii"]))
+      kpss.test(diff(vecm_data[,"gdp"]))     
+      
+  # VAR Lag Order
+    VARselect(vecm_data,lag.max = 8, type = "both")
+  # VAR estimat° (p=1, 2 & 7)
+    p1<-VAR(vecm_data, p=1, type = "both")
+    p2<-VAR(vecm_data, p=2, type = "both")
+    p7<-VAR(vecm_data, p=3, type = "both")
+  # VAR diagnostic tests
+    #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
+      serial.test(p1,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p1,lags.pt = 16,type = "PT.adjusted")
+      
+      serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+      
+      serial.test(p7,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p7,lags.pt = 16,type = "PT.adjusted")
+      
+    #JB: Jarque-Bera tests and multivariate skewness 
+          # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
+      normality.test(p1)
+        # Non-norm.
+      normality.test(p2)
+        # Non-norm.
+      normality.test(p7)
+        # Non-norm.
+    
+    #ARCH: 
+    arch.test(p1,lags.multi = 5)
+      #Heteroscedastic resid.
+    arch.test(p2,lags.multi = 5)
+      #Heteroscedastic resid.
+    arch.test(p7,lags.multi = 5)
+      #Heteroscedastic resid.
+    
+    #Stability : Recursive CUMSUM
+      plot(stability(p1),nc=2)
+      plot(stability(p2),nc=2)
+      plot(stability(p7),nc=2)
+    #    
+     
+  #VECM - Y=gdp,ii,d,inv      
+      #reorder data set for debt priority
+        vecm_data <- vecm_data[ , c("d","gdp","fii","inv")]
+        
+      vecm <- ca.jo(vecm_data,ecdet="trend",K=4) #Alternative specif° #1 pass 1 coint. relat° at 5%
+      summary(vecm)
+      vecm.r1<-cajorls(vecm,r=1)
+      alpha<-coef(vecm.r1$rlm)[1,]
+      beta<-vecm.r1$beta
+      resids<-resid(vecm.r1$rlm)
+      N<-nrow(resids)
+      sigma<-crossprod(resids)/N
+      
+      #alpha t-stats  
+      alpha.se<-sqrt(solve(crossprod(cbind(vecm@ZK %*% beta,
+                                           vecm@Z1))) [1,1]*diag(sigma))
+      alpha.t<-alpha/alpha.se
+      
+      #beta t-stats  
+      beta.se<-sqrt(diag(kronecker(solve(crossprod(vecm@RK [,-1])),
+                                   solve(t(alpha) %*% solve(sigma) %*% alpha))))
+      beta.t<-c(NA,beta[-1]/beta.se)
+      
+      #Display alpha & beta (with respect. t-stat) 
+      alpha
+      alpha.t
+      beta
+      beta.t  
+  
+      
+  #SVECM
+    vecm <- ca.jo(vecm_data,ecdet="trend",K=6)
+      
+      SR<-matrix(NA,nrow = 4,ncol = 4)
+      LR<-matrix(NA,nrow = 4,ncol = 4)
+      LR[1:4,1]<-0
+      SR[3,2]<-0
+      SR[3,4]<-0
+      LR[3,4]<-0
+      
+      SR[4,3]<-0
+      
+      SR
+      LR
+      
+      svecm<-SVEC(vecm,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)  
+      svecm
+      svecm$SR
+      #t-stat
+      svecm$SR / svecm$SRse
+      svecm$LR
+      svecm$LR / svecm$LRse
+      
+      svecm.irf<-irf(svecm)
+      svecm.irf
+      plot(svecm.irf)
+      
+      fevd.d <- fevd(svecm, n.ahead = 148)$dbtnw
+      fevd.d
+      
+###
 
 
 
@@ -647,8 +897,7 @@ plot(GvarD.impgrowth.irf)
 dev.off()
 
 
-### OLD - Struct break ### -----------------------------------------------------------------
-
+### OLD - Struct break 
 
 
 # set list for Alternative regression fits

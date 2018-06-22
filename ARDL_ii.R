@@ -34,11 +34,14 @@ fininvraw <- read.csv("FinInv.csv", skip = 1,head = TRUE, sep=",")
 finInvIndeed <- read.csv("PURGED_FININV.csv", skip = 2,head = TRUE, sep=",")
 #UnIdentified Financial assets
 intanginv <- read.csv("IntangibleInv.csv", skip = 1,head = TRUE, sep=",")
+prodinvraw <- read.csv("FinInv2.csv", skip = 1,head = TRUE, sep=",")
 
 
 DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
                      head = TRUE, sep=",")
 DebtToEq <- read.csv("Z1_NFCBusiness_CreditMarketDebtAsPercentageOfMarketValueOfCorpEquities.csv",
+                     head = TRUE, sep=",")
+DebtTot <- read.csv("NFCDEBT.csv",
                      head = TRUE, sep=",")
 #
 # Make Time Series of data
@@ -67,13 +70,17 @@ FinInv <- ts(finInvIndeed$FININDEED, start = c(1951,4),
 IntInv <- ts(intanginv$intinv, start = c(1951,4),
              end = c(2015,1),frequency = 4)
 
+#PRODUCTIVE INVESTMENT SERIES
+ProInv <- ts(prodinvraw$physasset, start = c(1951,4),end = c(2016,4),frequency = 4)
+
+
 FinInvHistRatio <- ts(fininvraw$hfininvratio, start = c(1951,4),end = c(2016,4),frequency = 4)
 FinInvRatio <- ts(fininvraw$fininvratio, start = c(1951,4),frequency = 4)
 AssetTot <- ts(fininvraw$totinv, start = c(1951,4),frequency = 4)
 
 dbtnw <- ts(DebtToNw$NCBCMDPNWMV, start = c(1951,4),end = c(2016,4),frequency = 4)
 dbteq <- ts(DebtToEq$NCBCMDPMVCE, start = c(1951,4),frequency = 4)
-
+dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
 #
 
 
@@ -117,9 +124,31 @@ data_list<- ts.intersect(log(inv5),capu1,log(profit1),
 # ++ ALTERNATIVE --->  Fii = FinInv + IntInv
 data_list<- ts.intersect(log(inv5),capu1,log(profit1),
                          ((FinInv+IntInv)/AssetTot),log(FinInv+IntInv),dbtnw)  
+
+
+
 # ++ ALTERNATIVE --->  cROISSANCE = Fii = f(u,r,etha)
 data_list<- ts.intersect(log(inv5),capu1,log(profit1),
                          ((FinInv+IntInv)/AssetTot),log(FinInv+IntInv),dbtnw)  
+
+
+# ++ ALTERNATIVE --->  Croissance = RGDP = f(u,r,etha)
+data_list<- ts.intersect(LogRgdp,capu1,log(profit1),
+                         ((FinInv+IntInv)/AssetTot),log(FinInv+IntInv),dbtnw) 
+
+
+
+# ++ ALTERNATIVE --->  cROISSANCE = Inv + ii + fi = f(u,r)
+data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                         ((FinInv+IntInv)/AssetTot),log(FinInv+IntInv),dbtnw)
+
+data_list<- ts.intersect(log(inv5+diff(IntInv)+diff(FinInv)),
+                         capu1,profit1/(ProInv),
+                         ((FinInv+IntInv)/AssetTot),
+                         log(FinInv+IntInv),LogRgdp,
+                         dbtnw,log(FinInv),log(inv5))
+
+
 
 
 #Create LIST of 5X5 variables (i-u-r-Fi-D)x(level-diff-lagLevel-2xlagDiff)
@@ -175,6 +204,23 @@ dev.off()
 
 #1- ADF:  Ho=non-stat.  H1= diff-stat.
 #2-KPSS:  Ho=stat.
+adf.test(ardl_data[,"gtot"])
+kpss.test(ardl_data[,"gtot"])
+adf.test(ardl_data[,"u"])
+kpss.test(ardl_data[,"u"])
+adf.test(ardl_data[,"r"])
+kpss.test(ardl_data[,"r"])
+adf.test(ardl_data[,"d"])
+kpss.test(ardl_data[,"d"])
+
+adf.test(diff(ardl_data[,"gtot"]))
+kpss.test(diff(ardl_data[,"gtot"]))
+adf.test(diff(ardl_data[,"u"]))
+kpss.test(diff(ardl_data[,"u"]))
+adf.test(diff(ardl_data[,"r"]))
+kpss.test(diff(ardl_data[,"r"]))
+adf.test(diff(ardl_data[,"d"]))
+kpss.test(diff(ardl_data[,"d"]))
 
 # LEVELS
 adf.test(inv5)
@@ -697,13 +743,24 @@ data_list_w <- window(data_list,start=c(1952,1), end=c(1982,1), frequency=4)
 data_list_w <- window(data_list,start=c(1982,1), end=c(2015,4), frequency=4)
 #lvldata <- ts(ardl_data,start=c(1984,3), end=c(2019,4), frequency=4)
 #1984 - 2008
-data_list_w <- window(data_list,start=c(1980,1), end=c(2008,1), frequency=4)
+data_list_w <- window(data_list,start=c(1984,1), end=c(2008,1), frequency=4)
 #lvldata <- ts(ardl_data,start=c(1984,1), end=c(2008,1), frequency=4)
 
 
 ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
                         r=(data_list_w[,3]), etha = data_list_w[,4],
                         fii = data_list_w[,5])
+
+
+#alternative gdp=growth
+data_list<- ts.intersect(LogRgdp,capu1,log(profit1), 
+                         (FinInv+IntInv)/AssetTot,
+                         log(FinInv+IntInv),dbtnw)
+ardl_data <- data.frame(gtot = (data_list_w[,1]), u = data_list_w[,2], 
+                        r=(data_list_w[,3]), etha = data_list_w[,4],
+                        fii = data_list_w[,5], gdp = data_list_w[,6],
+                        d = data_list_w[,7], fi = data_list_w[,8],
+                        inv = data_list_w[,9])
 ###
 
 #1/2 ALTERN.
@@ -746,8 +803,8 @@ Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=8,
 
 
 #4th. ALTERN. : CROISS=Fii=f(u,r,etha)
-  Alt1select1 <- ardl::auto.ardl(fii~u+r+etha, data=ardl_data, ymax=8,
-                                 xmax=c(12,8,8),case=5,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(gtot~u+r, data=ardl_data, ymax=8,
+                                 xmax=c(5,8,8),case=5,verbose = T,ic = "aic")
 #BEST for Fii is ARDL(3,2,1,0) case 5
 
   
@@ -914,12 +971,17 @@ coint(Mod_ii_c5)
 
 #CROISS=Fii 
 
-  Mod_sos<-ardl::ardl(fii ~ -1+u+r+etha, data=ardl_data, ylag=2,
-                      xlag=c(10,0,9), case = 5)
+  Mod_sos<-ardl::ardl(fii ~ -1+u+r+etha, data=ardl_data, ylag=7,
+                      xlag=c(4,8,6), case = 5)
+  
+  Mod_sos<-ardl::ardl(gtot ~ u + r, data=ardl_data, ylag=5,
+                        xlag=c(1,3), case = 5)
   summary(Mod_sos)
   bounds.test(Mod_sos)
   coint(Mod_sos)
 
+  
+  
   # I.I.D TESTS
     Box.test(Mod_sos$residuals,lag = 9, type="Ljung-Box",fitdf=4)
       #Ho:INDEPENDANT 
