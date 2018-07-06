@@ -647,11 +647,11 @@ print(causality(varLS, cause="dLS"))
     svecm$LR
     svecm$LR / svecm$LRse
   
-  svecm.irf<-irf(svecm)
+  svecm.irf<-irf(svecm, n.ahead = 48)
   svecm.irf
   plot(svecm.irf)
   
-  fevd.d <- fevd(svecm, n.ahead = 148)$dbtnw
+  fevd.d <- fevd(svecm, n.ahead = 48)$dbtnw
   fevd.d
   #
 
