@@ -3,6 +3,7 @@ setwd("C:/Users/fouwe/Documents/R/C5")
 
 library(tseries)
 library(stats)
+library(lmtest)
 # Read data
 RealGrowth <- read.csv("Z1_RGDP_3Dec_GDPC96.csv", head = TRUE, sep=",")
 DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
@@ -23,16 +24,22 @@ gdpCAP <- ts(RgdpPerCAPITA$GDPCAP, start = c(1800,1),frequency = 1)
 #AGGREGATE Quaterly to YEARLY Rgdp
   Ygdp <- aggregate(gdpts,nfrequency = 1, FUN = sum)
   Ygdp_RATE <- ((diff(Ygdp, lag=1, differences = 1)/lag(Ygdp,-1)))
+#MOBILE AVERAGE
+  library(TTR)
+  malevel<-12
+  moymob<-TTR::SMA(G_RATE,malevel)
+  
 #PLOTS
-  ts.plot(gdpts)
-  ts.plot(G_RATE)
+  ts.plot(gdpts, ylab="Q-RGDP (Level)")
+  ts.plot(G_RATE, ylab="Q-Growth (Level)")
   abline(h=0)
   abline(v=2003.75, col="grey50")
   abline(h=0.0125, col="red")
-  
+  ts.plot(moymob, type = "h", ylab=paste0("SMA-",malevel," :Q-Growth (Level)"))
   plot.default(G_RATE, type = "h")
   plot.default(Ygdp_RATE, type = "h")
   plot.default(GCAP_RATE, type = "h")
+  abline(v=1983.75, col="grey50")
   ts.plot(LogRgdp)
   ts.plot(Ygdp)
   
@@ -59,7 +66,7 @@ ts.plot(LogRgdp)
 ts.plot(gd2)
 # plot level & Diff-lev
 par(mfrow=c(2,2))
-ts.plot(LogRgdp<-vniveau[,1], ylab="RGDP (log)")
+ts.plot(LogRgdp<-vniveau[,1], ylabflibra="RGDP (log)")
 ts.plot(dnw<-vniveau[,2], ylab="Debt/net worth (level)")
 # plot of diff_Debt_level is informative of
 # the transformation in debt dynamics occuring from mid 1980's
@@ -167,6 +174,7 @@ library(urca)
 
 
 
+    
 ### COINTEGRAT? #####
 
   #Elliot &. also have cointegr?
@@ -223,7 +231,7 @@ library(urca)
   #RESAMPLE
     #LEVEL
       vniveaupostBpt <- window(vniveau,start=1983,end=2016)
-      vniveauante <- window(vniveau,start=1951,end=1985)
+      vniveauante <- window(vniveau,start=1951,end=1983)
       vniveaubtwn <- window(vniveau,start=1985,end=2007)
       ####                #LOG
       ####                  vlogpostBpt <- window(vlog,start=1983,end=2016)
@@ -238,7 +246,7 @@ library(urca)
         po.test(vniveaupostBpt[,2:1], demean = T, lshort = T) # idem the other way round
         ## RESULTS:  NO Cointegration
     #JOHANSEN
-        jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="const",type="trace") #,type="trace")
+        jojopostBpt <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="trend",type="trace") #,type="trace")
         summary(jojopostBpt)
       ##RESULTS: COINT at 1% from 1983 on !!!
       #           i.e one may estimate a VECM for G&D
@@ -259,10 +267,10 @@ library(urca)
       po.test(vniveauante[,(1:2)], demean = T, lshort = T)      # No COINT
       po.test(vniveauante[,2:1], demean = T, lshort = T) # neither the other way round
       #Johansen
-      jojoAnteTrace<-ca.jo(vniveauante[,(1:2)],ecdet="const",type="trace") #,type="trace")
+      jojoAnteTrace<-ca.jo(vniveauante[,(1:2)],ecdet="trend",type="trace") #,type="trace")
       summary(jojoAnteTrace)
       ###  5% COINT 
-      jojoAnteMax<-ca.jo(vniveau[,(1:2)],ecdet="const") #,type="trace")
+      jojoAnteMax<-ca.jo(vniveau[,(1:2)],ecdet="trend") #,type="trace")
       summary(jojoAnteMax)
       ###  1% COINT 
       
@@ -280,10 +288,23 @@ library(urca)
         po.test(vniveaubtwn[,(1:2)], demean = T, lshort = T)      # No COINT
         po.test(vniveaubtwn[,2:1], demean = T, lshort = T) # neither the other way round
         #Johansen
-        jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="const",type="trace") #,type="trace")
+        jojoBTW<-ca.jo(vniveaubtwn[,(1:2)],ecdet="trend",type="trace") #,type="trace")
         summary(jojoBTW)
        ###  COINT 
       
+        
+#Test the 1983-2016 period for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
+  #LEVEL
+  jojoStr2007 <- cajolst(vniveaupostBpt[,1:2])
+  summary(jojoStr2007)
+    slot(jojoStr2007, "bp")
+    slot(jojoStr2007, "x")
+    slot(jojoStr2007, "x")[101] # corrsponding to 2008:1
+## RESULTS: Cointegration is confirmed after data readjustment for break (2008,1)
+  #         i.e no worry about 2008 financial crisis
+    
+        
+        
 
 library(strucchange)
 
@@ -299,13 +320,15 @@ library(strucchange)
           efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
             # 0.053 --> 3 years
           plot(efpMo_rgdp)
-        ### RGDP BREAK in early 1980's   ##
+          abline(v=1983.75, col="grey50")
+        ### RGDP BREAK in 1983   ##
       #
       #Type= CUMsum
         #Log(RGDP) & narrowing data range from 1973 on...
           post73<-window(LogRgdp,start=1974)
           efpCum_g73 <- efp(post73 ~ 1)
           plot(efpCum_g73)
+          abline(v=1984.00, col="grey50")
           ### logRGDP BREAK in 1984   ###
       #
     ## DEBT ##
@@ -313,7 +336,10 @@ library(strucchange)
         efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
         # 0.053 --> 3 years
         plot(efpMo_d)
-      # BREAK in 1973 then mid 1980's for dnw   #
+         abline(v=1965.75, col="grey50")
+         abline(v=1984.75, col="grey50")
+        
+      # BREAK in 1965 then 1984 for dnw   #
     
       ### type= Recursive-CUMSUM
         efpReCum_d <- efp(dnw ~ 1)
@@ -353,40 +379,49 @@ library(strucchange)
         bp.growth <- breakpoints(LogRgdp ~ 1,breaks = 1)
         summary(bp.growth)
         fmg0 <- lm(LogRgdp ~ 1)
-        fmgf <- lm(LogRgdp ~ breakfactor(bp.growth))#,breaks = 1))
+        fmgf <- lm(LogRgdp ~ breakfactor(bp.growth),breaks = 4)
         plot(LogRgdp)
-        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+        lines(ts(fitted(fmg0), start=c(1951.75)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1951.75), frequency = 4), col = 4)
         lines(bp.growth)
-      # 
-      #RGDP
-        fs.gdpts <- Fstats(gdpts ~ 1)
-        plot(fs.gdpts)
-        breakpoints(fs.gdpts)
-        plot(gdpts)
-        lines(breakpoints(fs.gdpts))
-        ##Break: 1989.1
-        #
-        bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
-        summary(bp.gdpts)
-        fmg0 <- lm(gdpts ~ 1)
-        fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
-        plot(gdpts)
-        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-        lines(bp.gdpts)
-      #  
-      ##Sample OUT of 2007 crisis##
-        g2007<-window(LogRgdp,start=1952,end=2008)
-        bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
-        summary(bp.growth2007)
-        fmg0 <- lm(g2007 ~ 1)
-        fmgf <- lm(g2007 ~ breakfactor(bp.growth2007))#,breaks = 1))
-        plot(g2007)
-        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
-        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
-        lines(bp.growth2007)
-      #
+                      #LOG-rgdp PPOST 1973
+                        bp.growth <- breakpoints(post73 ~ 1,breaks = 4)
+                        summary(bp.growth)
+                        fmg0 <- lm(post73 ~ 1)
+                        fmgf <- lm(post73 ~ breakfactor(bp.growth),breaks = 4)
+                        plot(post73)
+                        lines(ts(fitted(fmg0), start=c(1974)), col = 3)
+                        lines(ts(fitted(fmgf), start = c(1974), frequency = 4), col = 4)
+                        lines(bp.growth)
+                      # 
+                      #RGDP
+                        fs.gdpts <- Fstats(gdpts ~ 1)
+                        plot(fs.gdpts)
+                        breakpoints(fs.gdpts)
+                        plot(gdpts)
+                        lines(breakpoints(fs.gdpts))
+                        ##Break: 1989.1
+                        #
+                        bp.gdpts <- breakpoints(gdpts ~ 1,breaks = 1)
+                        summary(bp.gdpts)
+                        fmg0 <- lm(gdpts ~ 1)
+                        fmgf <- lm(gdpts ~ breakfactor(bp.gdpts))#,breaks = 1))
+                        plot(gdpts)
+                        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+                        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+                        lines(bp.gdpts)
+                      #  
+                      ##Sample OUT of 2007 crisis##
+                        g2007<-window(LogRgdp,start=1952,end=2008)
+                        bp.growth2007 <- breakpoints(g2007 ~ 1,breaks = 1)
+                        summary(bp.growth2007)
+                        fmg0 <- lm(g2007 ~ 1)
+                        fmgf <- lm(g2007 ~ breakfactor(bp.growth2007))#,breaks = 1))
+                        plot(g2007)
+                        lines(ts(fitted(fmg0), start=c(1951)), col = 3)
+                        lines(ts(fitted(fmgf), start = c(1951,4), frequency = 4), col = 4)
+                        lines(bp.growth2007)
+                      #
 
     ## DEBT ##
       fs.debt2 <- Fstats(dnw ~ 1)
@@ -422,6 +457,7 @@ library(strucchange)
         lines(ts(fitted(fmg0), start=c(1800)), col = 3)
         lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
         lines(bp.gpercap)
+<<<<<<< HEAD
       # 
 
     ## Rgdp Growth RATE ##
@@ -451,38 +487,99 @@ library(strucchange)
   myvar <- data.frame(growth=window(gdpts,start=c(1951,4),end=c(2016,3)), debt=dnw)        
 library(urca)
 library(vars)
+=======
+        
+                #LOGgdpCAP
+                  fs.lgpercap <- Fstats(log(gdpCAP) ~ 1)
+                  plot(fs.lgpercap)
+                  breakpoints(fs.lgpercap)
+                  plot(log(gdpCAP))
+                  lines(breakpoints(fs.lgpercap))
+                  ##Modulating the number of BP...
+                  bp.lgpercap <- breakpoints(log(gdpCAP) ~ 1,breaks = 5)
+                  summary(bp.lgpercap)
+                  fmg0 <- lm(log(gdpCAP) ~ 1)
+                  fmgf <- lm(log(gdpCAP) ~ breakfactor(bp.lgpercap))#,breaks = 1))
+                  plot(log(gdpCAP))
+                  lines(ts(fitted(fmg0), start=c(1800)), col = 3)
+                  lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+                  lines(bp.lgpercap)
+                # 
+
+
+# VAR --------------------------------------------------------------------
+
+              ##LOG-rgdp
+                myvar <- data.frame(growth=LogRgdp, debt=dnw)
+              ##LEVEL-rgdp
+                myvar <- data.frame(growth=window(gdpts,start=c(1951,4),end=c(2016,3)), debt=dnw)        
+  library(urca)
+  library(vars)
+   
+                
+  var_ts <- ts.intersect(LogRgdp, log(dbtnw))
+  
+  var_list <- window(var_ts,start=c(1952,1), end=c(2015,1), frequency=4)
+  var_list <- window(var_ts,start=c(1984,1), end=c(2008,1), frequency=4)
+  
+  var_data <- data.frame(gdp = (var_list[,1]), d=(var_list[,2]))
+  
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 # --------------------------------------------------------------------------- #
 # ---------------------------- Reduced Form VAR ----------------------------- #
 
 ## Choose optimal length for unrestricted VAR
-VARselect(myvar, lag.max = 6, type = "both")
-  # SC --> 2 lags
+  VARselect(var_data, lag.max = 6, type = "both")
+    # SC & HQ --> 2 lags
+    # AIC & FPE --> 3 lags
+                  
+                  ## Order the 2 variables
+                  DcG <- myvar[, c("debt","growth")]
+                  GcD <- myvar[, c("growth","debt")]
 
-## Order the 2 variables
-DcG <- myvar[, c("debt","growth")]
-GcD <- myvar[, c("growth","debt")]
+## Estimate the VAR (for lag length 2 then 3)
+  ## Here "both" means we include a constant and a time trend
+  GvarD <- VAR(var_data, p = 2, type = "both")
+  GvarD <- VAR(var_data, p = 3, type = "both")
+  
+  
+                  ## See results (for now, no restrictions on PRIORITY. both RFVAR are symetric)
+                  DvarG
+                  GvarD
 
-## Estimate the VAR (for lag length 2)
-## Here "both" means we include a constant and a time trend
-DvarG <- VAR(DcG, p = 2, type = "both")
-GvarD <- VAR(GcD, p = 2, type = "both")
-## See results (for now, no restrictions on PRIORITY. both RFVAR are symetric)
-DvarG
-GvarD
+                  ## See more details.
+                  ## The variance-covariance matrix (and the correlation matrix)
+                  ## can be found at the very end (scroll down)
+                  summary(GvarD)
+                  
+                  ## See results for any equation in detail.
+                  summary(GvarD, equation = "growth")
+                  
+                  # Stability: see the roots of the companion matrix for the VAR
+                  # The moduli of the roots should all lie within the unit circle for the VAR to be stable
+                  # A stable VAR is stationary.
+                  roots(GvarD)
+                  # Two roots are close to unity.
+                  
 
-## See more details.
-## The variance-covariance matrix (and the correlation matrix)
-## can be found at the very end (scroll down)
-summary(GvarD)
+##### Residuals' Diagnostic tests ####
 
-## See results for any equation in detail.
-summary(GvarD, equation = "growth")
-
-# Stability: see the roots of the companion matrix for the VAR
-# The moduli of the roots should all lie within the unit circle for the VAR to be stable
-# A stable VAR is stationary.
-roots(GvarD)
-# One of the roots is close to unity.
+  #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
+    serial.test(GvarD,lags.pt = 16,type = "PT.asymptotic")
+    serial.test(GvarD,lags.pt = 16,type = "PT.adjusted")
+    
+  #JB: Jarque-Bera tests and multivariate skewness 
+        # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
+    normality.test(GvarD)
+    # Non-norm.
+    
+  #ARCH: 
+    arch.test(GvarD,lags.multi = 5)
+    #Heteroscedastic resid.
+    
+  #Stability : Recursive CUMSUM
+    plot(stability(GvarD),nc=2)
+    #
 
 # since DEBT & GROWTH are coint (see 'jojopostBpt')
 # and the syst. ROOTS are close to 1
@@ -535,7 +632,250 @@ print(causality(varLS, cause="dLS"))
 
 # REMEMBER AND TRY CANADA DATA !!!
 
+
+### VECM: (G,D) ####
+  vecm <- ca.jo(cbind(dnw,LogRgdp),ecdet="trend",K=2)
+  vecm <- ca.jo(var_data,ecdet="trend",K=3)
+  vecm.r1<-cajorls(vecm,r=1)
+  alpha<-coef(vecm.r1$rlm)[1,]
+  beta<-vecm.r1$beta
+  resids<-resid(vecm.r1$rlm)
+  N<-nrow(resids)
+  sigma<-crossprod(resids)/N
+  
+  #alpha t-stats  
+    alpha.se<-sqrt(solve(crossprod(cbind(vecm@ZK %*% beta,
+                          vecm@Z1))) [1,1]*diag(sigma))
+    alpha.t<-alpha/alpha.se
+    
+  #beta t-stats  
+    beta.se<-sqrt(diag(kronecker(solve(crossprod(vecm@RK [,-1])),
+                        solve(t(alpha) %*% solve(sigma) %*% alpha))))
+    beta.t<-c(NA,beta[-1]/beta.se)
+    
+  #Display alpha & beta (with respect. t-stat) 
+    alpha
+    alpha.t
+    beta
+    beta.t
+    
 # SVECM:  Growth --> Debt ---------------------------------------------------
+  #SVECM
+    vecm <- ca.jo(cbind(LogRgdp,dnw),ecdet="trend",K=2)
+      vecm <- ca.jo(vniveaupostBpt[,(1:2)],ecdet="trend",K=2)
+        vecm <- ca.jo(var_data,ecdet="trend",K=3)
+    
+    SR<-matrix(NA,nrow = 2,ncol = 2)
+    LR<-matrix(NA,nrow = 2,ncol = 2)
+    LR[1:2,2]<-0
+    SR
+    LR
+
+    svecm<-SVEC(vecm,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)  
+    svecm
+    svecm$SR
+    #t-stat
+    svecm$SR / svecm$SRse
+    svecm$LR
+    svecm$LR / svecm$LRse
+  
+  svecm.irf<-irf(svecm, n.ahead = 48)
+  svecm.irf
+  plot(svecm.irf)
+  
+  fevd.d <- fevd(svecm, n.ahead = 48)$dbtnw
+  fevd.d
+  #
+
+  
+
+# SVECM : Y=(rgdp, ii, d, r) ----------------------------------------------
+
+  #Consider 4 alternative specif°
+    # 1-demand/supply seting relation (D=debt ; S=TotInv)  
+      data_vecm1 <- ts.intersect(LogRgdp,
+                                 (diff(IntInv+FinInv)/(IntInv+FinInv)), 
+                                 (dbtnw),log(inv5))
+    # 2-Etha (REMEMBER AND CHANGE Fii to ETHA)
+      data_vecm1 <- ts.intersect(LogRgdp, (FinInv+IntInv)/(ProInv+IntInv+FinInv),
+                                 dbtnw,log(inv5))
+      
+    # 3-FAP  
+      data_vecm1 <- ts.intersect(LogRgdp,log(FinInv+IntInv), dbtnw,log(FAP))
+      
+    # 4-S&P INDEX  
+      data_vecm1 <- ts.intersect(LogRgdp,log(FinInv+IntInv), dbtnw,log(INDEX)) 
+    
+    # 5-Investment & Profit  
+      data_vecm1 <- ts.intersect(log(inv5),(log(FinInv+IntInv)), 
+                                 log(dbtnw),log(profit1))
+      
+  #WATCHOUT : use alternatively data_list_w according to sample PERIODs
+    
+    #52-2015
+    data_list_w <- window(data_vecm1,start=c(1952,1), end=c(2015,1), frequency=4)
+
+    #52 - 2007
+    data_list_w <- window(data_vecm1,start=c(1952,1), end=c(2008,1), frequency=4)
+
+    #52 - 1982
+    data_list_w <- window(data_vecm1,start=c(1952,1), end=c(1982,1), frequency=4)
+
+    #1985 - 2016
+    data_list_w <- window(data_vecm1,start=c(1980,1), end=c(2015,4), frequency=4)
+
+    #1984 - 2008
+    data_list_w <- window(data_vecm1,start=c(1984,1), end=c(2008,1), frequency=4)
+  
+    
+    
+    vecm_data <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
+                            d=(data_list_w[,3]), inv = data_list_w[,4])
+    
+    
+  # Descript. analysis
+    summary(data_list_w)
+    plot(data_list_w, nc=2)
+    plot(vecm_data, nc=2)
+   
+  # Stationnarity tests
+    summary(ur.df(vecm_data[,"gdp"],type = "trend", lags = 2))
+      # Value of test-statistic is: -1.3864 while 
+        # Critical values = tau3 -3.98 -3.42 -3.13 
+    summary(ur.df(diff(vecm_data[,"gdp"]),type = "drift", lags = 1))
+      # Value of test-statistic is: -8.2791 while 
+        # Critical values = tau2 -3.44 -2.87 -2.57
+    summary(ur.df(vecm_data[,"fii"],type = "drift", lags = 1))
+      # Value of test-statistic is: -0.6672 while 
+        # Critical values = tau2 -3.44 -2.87 -2.57
+    summary(ur.df(diff(vecm_data[,"fii"]),type = "none", lags = 0))
+      # Value of test-statistic is: -13.6779 while 
+        # Critical values = tau1 -2.58 -1.95 -1.62
+    
+    
+    #1- ADF:  Ho=non-stat.  H1= diff-stat.
+      adf.test(vecm_data[,"gdp"])
+      adf.test(vecm_data[,"fii"])
+      adf.test(vecm_data[,"d"])
+      adf.test(vecm_data[,"inv"])
+      
+      adf.test(diff(vecm_data[,"gdp"]))
+      adf.test(diff(vecm_data[,"fii"]))
+      adf.test(diff(vecm_data[,"d"]))
+      adf.test(diff(vecm_data[,"inv"]))
+      
+    #2-KPSS:  Ho=stat.
+      kpss.test(vecm_data[,"inv"])
+      kpss.test(vecm_data[,"d"])
+      kpss.test(vecm_data[,"fii"])
+      kpss.test(vecm_data[,"gdp"])
+      
+      kpss.test(diff(vecm_data[,"inv"]))
+      kpss.test(diff(vecm_data[,"d"]))
+      kpss.test(diff(vecm_data[,"fii"]))
+      kpss.test(diff(vecm_data[,"gdp"]))     
+      
+  # VAR Lag Order
+    VARselect(vecm_data,lag.max = 8, type = "both")
+  # VAR estimat° (p=1, 2 & 7)
+    p1<-VAR(vecm_data, p=1, type = "both")
+    p2<-VAR(vecm_data, p=2, type = "both")
+    p7<-VAR(vecm_data, p=3, type = "both")
+  # VAR diagnostic tests
+    #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
+      serial.test(p1,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p1,lags.pt = 16,type = "PT.adjusted")
+      
+      serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+      
+      serial.test(p7,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p7,lags.pt = 16,type = "PT.adjusted")
+      
+    #JB: Jarque-Bera tests and multivariate skewness 
+          # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
+      normality.test(p1)
+        # Non-norm.
+      normality.test(p2)
+        # Non-norm.
+      normality.test(p7)
+        # Non-norm.
+    
+    #ARCH: 
+    arch.test(p1,lags.multi = 5)
+      #Heteroscedastic resid.
+    arch.test(p2,lags.multi = 5)
+      #Heteroscedastic resid.
+    arch.test(p7,lags.multi = 5)
+      #Heteroscedastic resid.
+    
+    #Stability : Recursive CUMSUM
+      plot(stability(p1),nc=2)
+      plot(stability(p2),nc=2)
+      plot(stability(p7),nc=2)
+    #    
+     
+  #VECM - Y=gdp,ii,d,inv      
+      #reorder data set for debt priority
+        vecm_data <- vecm_data[ , c("d","gdp","fii","inv")]
+        
+      vecm <- ca.jo(vecm_data,ecdet="trend",K=4) #Alternative specif° #1 pass 1 coint. relat° at 5%
+      summary(vecm)
+      vecm.r1<-cajorls(vecm,r=1)
+      alpha<-coef(vecm.r1$rlm)[1,]
+      beta<-vecm.r1$beta
+      resids<-resid(vecm.r1$rlm)
+      N<-nrow(resids)
+      sigma<-crossprod(resids)/N
+      
+      #alpha t-stats  
+      alpha.se<-sqrt(solve(crossprod(cbind(vecm@ZK %*% beta,
+                                           vecm@Z1))) [1,1]*diag(sigma))
+      alpha.t<-alpha/alpha.se
+      
+      #beta t-stats  
+      beta.se<-sqrt(diag(kronecker(solve(crossprod(vecm@RK [,-1])),
+                                   solve(t(alpha) %*% solve(sigma) %*% alpha))))
+      beta.t<-c(NA,beta[-1]/beta.se)
+      
+      #Display alpha & beta (with respect. t-stat) 
+      alpha
+      alpha.t
+      beta
+      beta.t  
+  
+      
+  #SVECM
+    vecm <- ca.jo(vecm_data,ecdet="trend",K=6)
+      
+      SR<-matrix(NA,nrow = 4,ncol = 4)
+      LR<-matrix(NA,nrow = 4,ncol = 4)
+      LR[1:4,1]<-0
+      SR[3,2]<-0
+      SR[3,4]<-0
+      LR[3,4]<-0
+      
+      SR[4,3]<-0
+      
+      SR
+      LR
+      
+      svecm<-SVEC(vecm,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)  
+      svecm
+      svecm$SR
+      #t-stat
+      svecm$SR / svecm$SRse
+      svecm$LR
+      svecm$LR / svecm$LRse
+      
+      svecm.irf<-irf(svecm)
+      svecm.irf
+      plot(svecm.irf)
+      
+      fevd.d <- fevd(svecm, n.ahead = 148)$dbtnw
+      fevd.d
+      
+###
 
 
 
@@ -548,10 +888,7 @@ print(causality(varLS, cause="dLS"))
 
 
 
-
-
-
-
+# OLDIES ------------------------------------------------------------------
 
 
 # NOTE: The results for the reduced form VAR are not of much use beside
@@ -592,8 +929,7 @@ plot(GvarD.impgrowth.irf)
 dev.off()
 
 
-### OLD - Struct break ### -----------------------------------------------------------------
-
+### OLD - Struct break 
 
 
 # set list for Alternative regression fits
