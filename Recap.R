@@ -83,7 +83,7 @@ data_list<- ts.intersect(log(ProInv+IntInv+FinInv),
                          #log(dbtot),
                          (dbtnw))
 
-data_list_w <- window(data_list,start=c(1983,1), end=c(2015,1), frequency=4)
+data_list_w <- window(data_list,start=c(1984,1), end=c(2015,1), frequency=4)
 
 ardl_data <- data.frame(gtot = (data_list_w[,1]),
                         u = data_list_w[,2],
@@ -638,3 +638,46 @@ shapiro.test(Mod_sos$residuals) #Royston (1995) to be adequate for p.value < 0.1
 
 
 
+# ardl SERANN -------------------------------------------------------------
+
+Alt1select1 <- ardl::auto.ardl(gtot~u+r+d, data=ardl_data, ymax=18,
+                               xmax=c(8,8,8),case=(1),verbose = T,ic = "aic")
+
+data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
+                         (capu1),
+                         ((profit1/(ProInv+IntInv+FinInv))),
+                         dbtot/(ProInv+IntInv+FinInv),
+                         ((FinInv+IntInv)/(ProInv+IntInv+FinInv)),
+                         log(IntInv),
+                         log(FinInv), 
+                         LogRgdp, log(inv5),
+                         log(dbtot),
+                         (dbtnw))
+
+data_list_w <- window(data_list,start=c(1984,1), end=c(2015,1), frequency=4)
+
+
+ardl_data <- data.frame(gtot = (data_list_w[,1]),
+                        u = data_list_w[,2],
+                        r=(data_list_w[,3]), 
+                        d = data_list_w[,4],
+                        etha = data_list_w[,5],
+                        ii = data_list_w[,6], 
+                        fi = data_list_w[,7],
+                        gdp = data_list_w[,8],
+                        inv = data_list_w[,9],
+                        lgd = data_list_w[,10],
+                        dtonw = data_list_w[,11])
+
+Alt1select1 <- ardl::auto.ardl(ii~u+r+d, data=ardl_data, ymax=18,
+                               xmax=c(8,8,8),case=(1),verbose = T,ic = "aic")
+Mod_sos<-ardl::ardl(ii~u+r+d , data=ardl_data, ylag=1,
+                    xlag=c(0,1,4), case = 1)
+
+
+
+ardl::bounds.test(Mod_sos)
+
+ardl::coint(Mod_sos)
+
+#

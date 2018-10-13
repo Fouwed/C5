@@ -677,6 +677,115 @@ print(causality(varLS, cause="dLS"))
     # 5-Investment & Profit  
       data_vecm1 <- ts.intersect(log(inv5),(log(FinInv+IntInv)), 
                                  log(dbtnw),log(profit1))
+# 6- 30 aout  
+  data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), log(dbtot),log(ProInv)) 
+    
+  data_list_w <- window(data_vecm6,start=c(1980,1), end=c(2015,1), frequency=4)
+  vecm_data6 <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
+                          d=(data_list_w[,3]), inv = data_list_w[,4])
+  
+  #1- ADF:  Ho=non-stat.  H1= diff-stat.
+  #2- KPSS:  Ho=stat.
+  #3- Phillips-Perron Ho: non-stat.
+  adf.test(vecm_data6[,"gdp"])
+  kpss.test(vecm_data6[,"gdp"])
+  pp.test(vecm_data6[,"gdp"], type = "Z(t_alpha)")
+  ur.ers(vecm_data6[,"gdp"])
+  adf.test(diff(vecm_data6[,"gdp"]))
+  kpss.test(diff(vecm_data6[,"gdp"]))
+  pp.test(diff(vecm_data6[,"gdp"]), type = "Z(t_alpha)")
+  ur.ers(diff(vecm_data6[,"gdp"]))
+  
+  adf.test(vecm_data6[,"fii"])
+  kpss.test(vecm_data6[,"fii"])
+  pp.test(vecm_data6[,"fii"], type = "Z(t_alpha)")
+  adf.test(diff(vecm_data6[,"fii"]))
+  kpss.test(diff(vecm_data6[,"fii"]))
+  pp.test(diff(vecm_data6[,"fii"]), type = "Z(t_alpha)")
+  
+  adf.test(vecm_data6[,"d"])
+  kpss.test(vecm_data6[,"d"])
+  pp.test(vecm_data6[,"d"], type = "Z(t_alpha)")
+  adf.test(diff(vecm_data6[,"d"]))
+  kpss.test(diff(vecm_data6[,"d"]))
+  pp.test(diff(vecm_data6[,"d"]), type = "Z(t_alpha)")
+  
+  adf.test(vecm_data6[,"inv"])
+  kpss.test(vecm_data6[,"inv"])
+  pp.test(vecm_data6[,"inv"], type = "Z(t_alpha)")
+  adf.test(diff(vecm_data6[,"inv"]))
+  kpss.test(diff(vecm_data6[,"inv"]))
+  pp.test(diff(vecm_data6[,"inv"]), type = "Z(t_alpha)")
+  pp.test(diff(vecm_data6[,"inv"], differences = 2), type = "Z(t_alpha)")
+
+  
+library(urca)
+  
+  #Alternative test is "Elliott, Rothenberg and Stock...
+  #...(1996), which utilizes GLS detrending" p.167
+  # see Elliot & al. (1996, p.825) 
+  # for Critical values (-3.46 at 1% here)
+  # Ho=non-stat.
+  #Level
+  ur.ers(diff(vecm_data6[,"fii"]), model="const")
+  ur.ers(dnw)
+  #Diff
+  ur.ers(gd,model="trend")
+  ur.ers(dnwd,model="trend")
+  
+  
+  
+VARselect(vecm_data6,lag.max = 8, type = "both")
+p1<-VAR(vecm_data6, p=5, type = "both")
+p2<-VAR(vecm_data6, p=2, type = "both")
+p7<-VAR(vecm_data6, p=3, type = "both")
+serial.test(p1,lags.pt = 16,type = "PT.asymptotic")
+serial.test(p1,lags.pt = 16,type = "PT.adjusted")
+serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
+serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+serial.test(p7,lags.pt = 16,type = "PT.asymptotic")
+serial.test(p7,lags.pt = 16,type = "PT.adjusted")
+normality.test(p1)
+normality.test(p2)
+normality.test(p7)
+arch.test(p1,lags.multi = 5)
+arch.test(p2,lags.multi = 5)
+arch.test(p7,lags.multi = 5)
+plot(stability(p1),nc=2)
+plot(stability(p2),nc=2)
+plot(stability(p7),nc=2)
+vecm_data6 <- vecm_data6[ , c("d","gdp","fii","inv")]
+vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=5) #Alternative specif° #1 pass 1 coint. relat° at 5%
+summary(vecm6)
+vecm6.r1<-cajorls(vecm6,r=1)
+alpha6<-coef(vecm6.r1$rlm)[1,]
+beta6<-vecm6.r1$beta
+resids6<-resid(vecm6.r1$rlm)
+N6<-nrow(resids6)
+alpha6.se<-sqrt(solve(crossprod(cbind(vecm6@ZK %*% beta6,
+vecm6@Z1))) [1,1]*diag(sigma))
+alpha6.t<-alpha6/alpha6.se
+beta6.se<-sqrt(diag(kronecker(solve(crossprod(vecm6@RK [,-1])),
+solve(t(alpha6) %*% solve(sigma) %*% alpha6))))
+beta6.t<-c(NA,beta6[-1]/beta6.se)
+alpha6
+alpha6.t
+beta6
+beta6.t
+svecm6<-SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)
+svecm6
+svecm6$SR / svecm6$SRse
+svecm6$LR
+svecm6$LR / svecm6$LRse
+svecm6.irf<-irf(svecm6)
+plot(svecm6.irf)
+svecm6.irf<-irf(svecm6, n.ahead = 16)
+plot(svecm6.irf)
+svecm6.irf<-irf(svecm6, n.ahead = 40)
+plot(svecm6.irf)
+
+      
+      
       
   #WATCHOUT : use alternatively data_list_w according to sample PERIODs
     
@@ -840,7 +949,7 @@ print(causality(varLS, cause="dLS"))
       svecm.irf
       plot(svecm.irf)
       
-      fevd.d <- fevd(svecm, n.ahead = 148)$dbtnw
+      fevd.d <- fevd(svecm, n.ahead = 16)$dbtnw
       fevd.d
       
 ###
@@ -849,8 +958,83 @@ print(causality(varLS, cause="dLS"))
 
 
 
+# Fine TUNING -------------------------------------------------------------
 
 
+      # 6- 30 aout  
+      data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), 
+                                 log(dbtot),log(ProInv)) 
+        #dnw
+        data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv),
+                                  log(dbtnw),log(inv5)) 
+        #inv5
+        data_vecm6 <- ts.intersect(LogRgdp,log(FinInv),
+                                   log(dbtnw),log(inv5)) 
+        #FinInv
+        data_vecm6 <- ts.intersect(LogRgdp,log(FinInv),
+                                   log(dbtnw), log(ProInv))
+        
+      data_list_w <- window(data_vecm6,start=c(1980,1), end=c(2015,1), frequency=4)
+      vecm_data6 <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
+                               d=(data_list_w[,3]), inv = data_list_w[,4])
+      
+      VARselect(vecm_data6,lag.max = 8, type = "both")
+      p1<-VAR(vecm_data6, p=7, type = "both")
+      p2<-VAR(vecm_data6, p=8, type = "both")
+      p7<-VAR(vecm_data6, p=9, type = "both")
+      serial.test(p1,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p1,lags.pt = 16,type = "PT.adjusted")
+      serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+      serial.test(p7,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p7,lags.pt = 16,type = "PT.adjusted")
+      normality.test(p1)
+      normality.test(p2)
+      normality.test(p7)
+      arch.test(p1,lags.multi = 5)
+      arch.test(p2,lags.multi = 5)
+      arch.test(p7,lags.multi = 5)
+      plot(stability(p1),nc=2)
+      plot(stability(p2),nc=2)
+      plot(stability(p7),nc=2)
+      vecm_data6 <- vecm_data6[ , c("d","gdp","fii","inv")]
+      vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=8) #Alternative specif° #1 pass 1 coint. relat° at 5%
+      summary(vecm6)
+      vecm6.r1<-cajorls(vecm6,r=1)
+      alpha6<-coef(vecm6.r1$rlm)[1,]
+      beta6<-vecm6.r1$beta
+      resids6<-resid(vecm6.r1$rlm)
+      N6<-nrow(resids6)
+      alpha6.se<-sqrt(solve(crossprod(cbind(vecm6@ZK %*% beta6,
+                                            vecm6@Z1))) [1,1]*diag(sigma))
+      alpha6.t<-alpha6/alpha6.se
+      beta6.se<-sqrt(diag(kronecker(solve(crossprod(vecm6@RK [,-1])),
+                                    solve(t(alpha6) %*% solve(sigma) %*% alpha6))))
+      beta6.t<-c(NA,beta6[-1]/beta6.se)
+      alpha6
+      alpha6.t
+      beta6
+      beta6.t
+      
+      SR6<-matrix(NA,nrow = 4,ncol = 4)
+      LR6<-matrix(NA,nrow = 4,ncol = 4)
+      LR6[1:4,1]<-0
+      LR6[3,4]<-0
+      SR6[3,2]<-0
+      SR6[3,4]<-0
+      
+      svecm6<-SVEC(vecm6,LR=LR6,SR=SR6,r=1,lrtest=F,boot = T,runs = 1000)
+        svecm6
+        svecm6$SR / svecm6$SRse
+        svecm6$LR
+        svecm6$LR / svecm6$LRse
+        svecm6.irf<-irf(svecm6)
+        plot(svecm6.irf)
+      svecm6.irf<-irf(svecm6, n.ahead = 16)
+      plot(svecm6.irf)
+      svecm6.irf<-irf(svecm6, n.ahead = 40)
+      plot(svecm6.irf)
+      
 
 
 
