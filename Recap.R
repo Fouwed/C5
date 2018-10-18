@@ -220,79 +220,98 @@ library(strucchange)
 # Ho: no struct. break (Kleiber p.171)
 
 ## GROWTH ##
-#RGDP LEVEL - Type= MOsum - ALL DATA RANGE
-efpMo_rgdp <- efp(gdpts ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
-# 0.053 --> 3 years
-plot(efpMo_rgdp)
-abline(v=1983.75, col="grey50")
-###RESULTS:RGDP BREAK in 1983   ##
+  #RGDP DIFF - Type= MOsum - ALL DATA RANGE
+    efpMo_rgdp <- efp(diff(gdpts) ~ 1, type = "Rec-MOSUM",h=0.3)
+    # 0.3 --> 21 years trimming
+    plot(efpMo_rgdp)
+    abline(v=1984.86, col="grey40")
+    abline(v=1983.5, col="grey62")
+    ###RESULTS:RGDP BREAK in 1984   ##
 
-#Log(RGDP) - Type= CUMsum & narrowing data range from 1973 on...
-post73<-window(LogRgdp,start=1974)
-efpCum_g73 <- efp(post73 ~ 1)
-plot(efpCum_g73)
-abline(v=1984.00, col="grey50")
-###RESULTS:logRGDP BREAK in 1984   ###
-
-
+  
 ## DEBT ##
-### type= MOSUM
-efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
-# 0.053 --> 3 years
-plot(efpMo_d)
-abline(v=1965.75, col="grey50")
-abline(v=1984.75, col="grey50")
-###RESULTS: BREAK in 1965 then 1984 for dnw   #
+  ### type= MOSUM
+    efpMo_d <- efp(dnw ~ 1, type = "Rec-MOSUM",h=0.053)#1980's break whithin 0.05-->0.07
+    # 0.053 --> 3 years
+    plot(efpMo_d)
+    abline(v=1965.75, col="grey50")
+    abline(v=1984.75, col="grey50")
+    ###RESULTS: BREAK in 1965 then 1984 for dnw   #
 
 
-#Out of conf. interv.
-# Ho: No Struct. Break
-sctest(efpMo_rgdp)
-sctest(efpCum_g73)
-sctest(efpMo_d)
+  #Out of conf. interv.
+    # Ho: No Struct. Break
+    sctest(efpMo_rgdp)
+    sctest(efpCum_g73)
+    sctest(efpMo_d)
 
 
 #2- StrBrk_2 : Fstat
 
-## GROWTH ##
-#LOG-rgdp
-fs.growth <- Fstats(LogRgdp ~ 1)
-breakpoints(fs.growth)
-bp.growth <- breakpoints(LogRgdp ~ 1,breaks = 1)
-summary(bp.growth)
-fmg0 <- lm(LogRgdp ~ 1)
-fmgf <- lm(LogRgdp ~ breakfactor(bp.growth),breaks = 4)
-plot(LogRgdp)
-lines(ts(fitted(fmg0), start=c(1951.75)), col = 3)
-lines(ts(fitted(fmgf), start = c(1951.75), frequency = 4), col = 4)
-lines(bp.growth)
-###RESULTS: BREAK in 1983:3 for LogRgdp   #   
+  ## GROWTH ##
+    #DIFF-rgdp
+      # F stat
+        fs.growth <- Fstats(diff(gdpts) ~ 1)
+        sctest(fs.growth, type = "supF",asymptotic = T)
+        btsctest(fs.growth, type = "aveF",asymptotic = T)
+        sctest(fs.growth, type = "expF")
 
-## DEBT ##
-fs.debt2 <- Fstats(dnw ~ 1)
-breakpoints(fs.debt2)
-bp.debt2 <- breakpoints(dnw ~ 1,breaks = 1)
-summary(bp.debt2)
-fmdnw0 <- lm(dnw ~ 1)
-fmdnwf <- lm(dnw ~ breakfactor(bp.debt2))#,breaks = 1))
-plot(dnw)
-lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
-lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
-lines(bp.debt2)
-###RESULTS: BREAK in 1985:3 for dnw   #      
+        
 
-## Long Term: Rgdp Per CAPITA 1800-2016 ##
-fs.gpercap <- Fstats(gdpCAP ~ 1)
-##Modulating the number of BP...
-bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 5)
-summary(bp.gpercap)
-fmg0 <- lm(gdpCAP ~ 1)
-fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
-plot(gdpCAP)
-lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
-lines(bp.gpercap)
-###RESULTS: BREAK in 1984 for gdpCAP whenever BrkPts > 1   #   
+      # Fitted models
+        fs.growth <- Fstats(diff(gdpts) ~ 1)
+        plot(fs.growth)
+        breakpoints(fs.growth)
+            bp.growth <- breakpoints(diff(gdpts) ~ 1,breaks = 1)
+        summary(bp.growth)
+        fmg0 <- lm(diff(gdpts) ~ 1)
+        fmgf <- lm(diff(gdpts) ~ breakfactor(bp.growth))
+        plot(diff(gdpts), ylab="diff.RGDP")
+        lines(ts(fitted(fmg0), start=c(1947.25)), col = 3)
+        lines(ts(fitted(fmgf), start = c(1947.25), frequency = 4), col = 4)
+        lines(bp.growth)
+        ###RESULTS: BREAK in 1982:4 for LogRgdp   #   
 
+    
+    #BIC of many breakpoints
+      bp.growth2 <- breakpoints(diff(gdpts) ~ 1)
+      summary(bp.growth2)
+      x <- c(3141,    3119,    3120,    3126,    3134,    3144)
+      plot(c(0,1,2,3,4,5), x, xlab="Number of break points", ylab="BIC", type="l")
+      points(c(0,1,2,3,4,5), x,type = "p")
+    
+    
+    
+    
+  ## DEBT ##
+    fs.debt2 <- Fstats(dnw ~ 1)
+    breakpoints(fs.debt2)
+    bp.debt2 <- breakpoints(dnw ~ 1,breaks = 1)
+    summary(bp.debt2)
+    fmdnw0 <- lm(dnw ~ 1)
+    fmdnwf <- lm(dnw ~ breakfactor(bp.debt2))#,breaks = 1))
+    plot(dnw)
+    lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
+    lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
+    lines(bp.debt2)
+    ###RESULTS: BREAK in 1985:3 for dnw   #      
+
+  ## Long Term: Rgdp Per CAPITA 1800-2016 ##
+    fs.gpercap <- Fstats(gdpCAP ~ 1)
+    
+    ##Modulating the number of BP...
+      bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 5)
+      summary(bp.gpercap)
+      fmg0 <- lm(gdpCAP ~ 1)
+      fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
+      plot(gdpCAP)
+      lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+      lines(bp.gpercap)
+      ###RESULTS: BREAK in 1984 for gdpCAP whenever BrkPts > 1   #   
+
+
+
+# Reduced-VAR -------------------------------------------------------------
 
 
 # ---- Reduced Form VAR ----------------------------- #
