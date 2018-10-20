@@ -148,6 +148,10 @@ data_list<- ts.intersect(log(inv5+diff(IntInv)+diff(FinInv)),
                          log(FinInv+IntInv),LogRgdp,
                          dbtnw,log(FinInv),log(inv5))
 
+# ++ ALTERNATIVE Oct-2018 --->  g(prod) = f(u,r,ii)
+data_list<- ts.intersect(log(inv5),
+                         capu1,profit1/(ProInv),
+                         log(FinInv+IntInv))
 
 
 
@@ -748,8 +752,7 @@ data_list_w <- window(data_list,start=c(1984,1), end=c(2008,1), frequency=4)
 
 
 ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
-                        r=(data_list_w[,3]), etha = data_list_w[,4],
-                        fii = data_list_w[,5])
+                        r=(data_list_w[,3]), fii = data_list_w[,4])
 
 
 #alternative gdp=growth
@@ -775,11 +778,11 @@ write.csv(lvldata, file = "MyData.csv")
 # LagSel 1 ---- No Debt -----------------------------------------------------
 
 #1st. Alternative : i~u.r.fi
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=2,
+Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=6,
                                xmax=c(4,4,4),case=1,verbose = T,ic = "aic")
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=4,
+Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=6,
                                xmax=c(4,4,4),case=3,verbose = T,ic = "aic")
-Alt1select1 <- ardl::auto.ardl(inv~u+r+fi, data=lvldata, ymax=4,
+Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=6,
                                xmax=c(4,4,4),case=5,verbose = T,ic = "aic")
 #2nd. ALTERN. : + intangibles
 Alt1select1 <- ardl::auto.ardl(inv~u+r+fi+ii, data=lvldata, ymax=2,
@@ -961,7 +964,7 @@ coint(Mod_ii_c3)
 #Fii INTANGIBLES = Fi+ii
 #--> Best Model Selected previously: (3.2.1.3)
 #Case 5
-Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=1,
+Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=2,
                       xlag=c(1,0,0), case = 5)
 summary(Mod_ii_c5)
 bounds.test(Mod_ii_c5)
@@ -1072,6 +1075,43 @@ ardl::bounds.test(mod)
 ardl::coint(ArdlRatioAlt1)
 
 
-# Endogeneity -------------------------------------------------------------
 
-cor()
+# OCTOBER -----------------------------------------------------------------
+
+data_list<- ts.intersect(diff(ProInv),
+                          capu1,profit1/(AssetTot),
+                          diff(FinInv+IntInv))
+
+data_list_w <- window(data_list,start=c(1984,1), end=c(2008,4), frequency=4)
+
+ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
+                        r=(data_list_w[,3]), fii = data_list_w[,4])
+
+Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=6,
+                               xmax=c(4,4,4),case=5,verbose = T,ic = "aic")
+
+Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=2,
+                            xlag=c(1,0,0), case = 5)
+
+bounds.test(Mod_ii_c5)
+coint(Mod_ii_c5)
+
+# DIAG Tests ####
+#Ho:INDEPENDANT
+Box.test(Mod_ii_c5$residuals,lag = 9, type="Ljung-Box",fitdf=4)
+
+#Ho:constant error variance
+car::ncvTest(Mod_ii_c5)
+
+shapiro.test(Mod_ii_c5$residuals) 
+#Royston (1995) to be adequate for p.value < 0.1.
+
+
+Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=20,
+xlag=c(8,9,9), case = 5)
+Box.test(Mod_ii_c5$residuals,lag = 9, type="Ljung-Box",fitdf=4)
+car::ncvTest(Mod_ii_c5)
+shapiro.test(Mod_ii_c5$residuals)
+
+
+
