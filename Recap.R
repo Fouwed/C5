@@ -220,7 +220,8 @@ library(strucchange)
 # Ho: no struct. break (Kleiber p.171)
 
 ## GROWTH ##
-  #RGDP DIFF - Type= MOsum - ALL DATA RANGE
+
+  #DIFF-rgdp - EFP Type= MOsum - ALL DATA RANGE
     efpMo_rgdp <- efp(diff(gdpts) ~ 1, type = "Rec-MOSUM",h=0.3)
     # 0.3 --> 21 years trimming
     plot(efpMo_rgdp)
@@ -228,6 +229,7 @@ library(strucchange)
     abline(v=1983.5, col="grey62")
     ###RESULTS:RGDP BREAK in 1984   ##
 
+<<<<<<< HEAD
 
 ## DEBT ##
   ### type= MOSUM
@@ -271,45 +273,175 @@ library(strucchange)
         lines(ts(fitted(fmgf), start = c(1947.25), frequency = 4), col = 4)
         lines(bp.growth)
         ###RESULTS: BREAK in 1982:4 for LogRgdp   #   
+=======
+  #DIFF-rgdp - Fstat
+    #F-statistics
+      fs.growth <- Fstats(diff(gdpts) ~ 1)
+      sctest(fs.growth, type = "supF",asymptotic = T)
+      btsctest(fs.growth, type = "aveF",asymptotic = T)
+      sctest(fs.growth, type = "expF")
 
-    
+    #Fitted models
+      fs.growth <- Fstats(diff(gdpts) ~ 1)
+      plot(fs.growth)
+      breakpoints(fs.growth)
+          bp.growth <- breakpoints(diff(gdpts) ~ 1,breaks = 1)
+      summary(bp.growth)
+      fmg0 <- lm(diff(gdpts) ~ 1)
+      fmgf <- lm(diff(gdpts) ~ breakfactor(bp.growth))
+      plot(diff(gdpts), ylab="diff.RGDP")
+      lines(ts(fitted(fmg0), start=c(1947.25)), col = 3)
+      lines(ts(fitted(fmgf), start = c(1947.25), frequency = 4), col = 4)
+      lines(bp.growth)
+      ###RESULTS: BREAK in 1982:4 for LogRgdp   #   
+>>>>>>> 080a319056724b50b448253192efe80eb7d4cf34
+
     #BIC of many breakpoints
       bp.growth2 <- breakpoints(diff(gdpts) ~ 1)
       summary(bp.growth2)
       x <- c(3141,    3119,    3120,    3126,    3134,    3144)
       plot(c(0,1,2,3,4,5), x, xlab="Number of break points", ylab="BIC", type="l")
       points(c(0,1,2,3,4,5), x,type = "p")
-    
-    
-    
-    
-  ## DEBT ##
-    fs.debt2 <- Fstats(dnw ~ 1)
-    breakpoints(fs.debt2)
-    bp.debt2 <- breakpoints(dnw ~ 1,breaks = 1)
-    summary(bp.debt2)
-    fmdnw0 <- lm(dnw ~ 1)
-    fmdnwf <- lm(dnw ~ breakfactor(bp.debt2))#,breaks = 1))
-    plot(dnw)
-    lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
-    lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
-    lines(bp.debt2)
-    ###RESULTS: BREAK in 1985:3 for dnw   #      
+  
+  
+    #Out of conf. interv.
+    # Ho: No Struct. Break
+      sctest(efpMo_rgdp)
+      sctest(fs.growth)
+ 
 
-  ## Long Term: Rgdp Per CAPITA 1800-2016 ##
-    fs.gpercap <- Fstats(gdpCAP ~ 1)
+## Long Term: Rgdp Per CAPITA 1800-2016 ##
+  fs.gpercap <- Fstats(gdpCAP ~ 1)
     
-    ##Modulating the number of BP...
-      bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 5)
-      summary(bp.gpercap)
-      fmg0 <- lm(gdpCAP ~ 1)
-      fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
-      plot(gdpCAP)
-      lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
-      lines(bp.gpercap)
-      ###RESULTS: BREAK in 1984 for gdpCAP whenever BrkPts > 1   #   
+  ##Modulating the number of BP...
+    bp.gpercap <- breakpoints(gdpCAP ~ 1,breaks = 5)
+    summary(bp.gpercap)
+    fmg0 <- lm(gdpCAP ~ 1)
+    fmgf <- lm(gdpCAP ~ breakfactor(bp.gpercap))#,breaks = 1))
+    plot(gdpCAP)
+    lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+    lines(bp.gpercap)
+    ###RESULTS: BREAK in 1984 for gdpCAP whenever BrkPts > 1   #   
 
+## DEBT ##
+  # EFP process
+    #type= MOSUM
+      efpMo_d <- efp(diff(dnw) ~ 1, type = "Rec-MOSUM",h=0.145)#1980's break whithin 0.05-->0.07
+      # 0.053 --> 3 years
+      plot(efpMo_d)
+      abline(v=1999.5, col="grey50")
+      abline(v=1985.0, col="grey50")
+      ###RESULTS: BREAK in 1985 then 1999 for dnw   #
+      
+    #type= ME
+      efpCu_d <- efp(diff(dnw) ~ 1, type = "ME")
+      # 0.053 --> 3 years
+      plot(efpCu_d)
+      abline(v=1999.5, col="grey50")
+      abline(v=1985.0, col="grey50")
+      ###RESULTS: BREAK in 1985 then 1999 for dnw   #
+      
+  #Fstat
+    #p.vavule of F-stat
+      fs.debt <- Fstats(diff(dnw) ~ 1)
+      sctest(fs.debt, type = "supF",asymptotic = T)
+      sctest(fs.debt, type = "aveF",asymptotic = T)
+      sctest(fs.debt, type = "expF")
+      
+    #BIC of many breakpoints
+      bp.debt1 <- breakpoints(diff(dnw) ~ 1)
+      summary(bp.debt1)
+      x <- c(570.4, 567.3, 564.1, 566.9, 569.6, 579.8)
+      plot(c(0,1,2,3,4,5), x, xlab="Number of break points", ylab="BIC", type="l")
+      points(c(0,1,2,3,4,5), x,type = "p")
+      
+    # Fitted models
+      fs.debt2 <- Fstats(diff(dnw) ~ 1)
+      breakpoints(fs.debt2)
+      bp.debt2 <- breakpoints(diff(dnw) ~ 1,breaks = 2)
+      summary(bp.debt2)
+      fmdnw0 <- lm(diff(dnw) ~ 1)
+      fmdnwf <- lm(diff(dnw) ~ breakfactor(bp.debt2))
+      plot(diff(dnw))
+      lines(ts(fitted(fmdnw0), start=c(1951)), col = 3)
+      lines(ts(fitted(fmdnwf), start = c(1951,4), frequency = 4), col = 4)
+      lines(bp.debt2)
+      
+      
+    #Stats
+      sctest(efpMo_d)    
+      sctest(efpCu_d)
+      sctest(fs.debt2)
+      
+# ZIVOT & ANDREWS test
+  #RGDP - Level
+    za.dnw <- ur.za(gdpts, lag= 9, model = "intercept")
+    summary(za.dnw)
+    plot(za.dnw)
+  
+    za.dnw <- ur.za(gdpts, lag= 9, model = "trend")
+    summary(za.dnw)
+    plot(za.dnw)
+    # result: non-signif BP in 1980:50
+    
+    za.dnw <- ur.za(gdpts, lag= 9, model = "both")
+    summary(za.dnw)
+    plot(za.dnw)
 
+  #DEBT - Level
+    za.dnw <- ur.za(dnw, lag= 9, model = "intercept")
+    summary(za.dnw)
+    plot(za.dnw)
+    
+    za.dnw <- ur.za(dnw, lag= 1, model = "trend")
+    summary(za.dnw)
+    plot(za.dnw)
+    # result: non-signif BP in 1998:50
+      
+    za.dnw <- ur.za(dnw, lag= 9, model = "both")
+    summary(za.dnw)
+    plot(za.dnw)
+   
+       
+#BREAK in the cointegration 
+data_coint <- ts.intersect(gdpts, dnw, diff(gdpts),diff(dnw))
+ci_dat <- data.frame(g = (data_coint[,1]), d = data_coint[,2],
+                     dg= data_coint[,3], dd= data_coint[,4])
+            #ci_dat <- window(ci_dat2, start= c(1952, 1)) #, end= c(2016,4),frequency = 4)
+  coint.res <- residuals(lm(g ~ d, data = ci_dat))
+  coint.res <- lag(ts(coint.res, start = c(1953, 1), freq = 4), k = -1)
+  data_coint <- ts.intersect(gdpts, dnw, diff(gdpts),diff(dnw),coint.res)
+  ci_dat <- data.frame(g = (data_coint[,1]), d = data_coint[,2],
+                       dg= data_coint[,3], dd= data_coint[,4],
+                       cir= data_coint[,5])
+      
+            #ci_dat <- cbind(ci_dat, coint.res)
+            #ci_dat2 <- cbind(ci_dat2, diff(ci_dat2[,"g"]), coint.res)
+      
+  ecm.model <- dg ~ cir + dd
+      
+  #EFP
+    ocus <- efp(ecm.model, type = "OLS-CUSUM", data = ci_dat)
+    me <- efp(ecm.model, type = "ME", data = ci_dat, h = 0.2)
+    bound.ocus <- boundary(ocus, alpha = 0.01)
+    plot(ocus, boundary = FALSE)
+    lines(bound.ocus, col = "red")
+    lines(-bound.ocus, col = "red")
+    
+    plot(me, functional = NULL)
+    
+    plot(ocus, functional = "meanL2")
+    
+    sctest(ocus)
+      
+  #F-stat tests
+      fs <- Fstats(ecm.model, from = c(1955, 1),
+                   to = c(1990, 1), data = ci_dat)
+      plot(fs, alpha = 0.01)
+      plot(fs, aveF=T, alpha = 0.01)
+      
+      
+      
 
 # Reduced-VAR -------------------------------------------------------------
 
