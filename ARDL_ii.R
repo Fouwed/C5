@@ -119,6 +119,15 @@ data_list<- ts.intersect(log(inv5),capu1,log(profit1),
                          (FinInv/AssetTot),log(IntInv),dbtnw)
 
 # ++ ALTERNATIVE --->  FinInvHistRatio
+<<<<<<< HEAD
+  data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                           (FinInvHistRatio),log(IntInv),dbtnw)
+# ++ ALTERNATIVE --->  Fii = FinInv + IntInv
+  data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                           ((FinInv+IntInv)/AssetTot),log(FinInv+IntInv),dbtnw)  
+  
+  
+=======
 data_list<- ts.intersect(log(inv5),capu1,log(profit1),
                          (FinInvHistRatio),log(IntInv),dbtnw)
 # ++ ALTERNATIVE --->  Fii = FinInv + IntInv
@@ -155,6 +164,7 @@ data_list<- ts.intersect(log(inv5),
 
 
 
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 #Create LIST of 5X5 variables (i-u-r-Fi-D)x(level-diff-lagLevel-2xlagDiff)
 difdata_list <- diff(data_list)
 lagdata_list <- lag(data_list, k=-1)
@@ -725,6 +735,41 @@ Summary(model1)
 #### 1952 - 2016
 
 #Create dataframe for compatibility with ARDL PACKAGE Funct?
+<<<<<<< HEAD
+  #ALT1: c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
+            #r=(ecmeq[,3]), fi = (ecmeq[,4]), d = ecmeq[,5])
+  #ALT2:ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
+    #                     r=(data_list[,3]), fi = (data_list[,4]),
+    #                     ii = data_list[,5], d = data_list[,6])
+
+  #ALT3:Merging Fi & ii into Fii=total intangibles(financial+goodwill)
+
+#WATCHOUT : use alternatively lvldate according to sample PERIODs
+  #52-2015
+    data_list_w <- window(data_list,start=c(1952,1), end=c(2015,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1952,3), end=c(2017,4), frequency=4)
+  #52 - 2007
+    data_list_w <- window(data_list,start=c(1952,1), end=c(2008,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1952,3), end=c(2008,1), frequency=4)
+  #52 - 1982
+    data_list_w <- window(data_list,start=c(1952,1), end=c(1982,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1952,3), end=c(1987,1), frequency=4)
+  #1985 - 2016
+    data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1984,3), end=c(2019,4), frequency=4)
+  #1984 - 2008
+    data_list_w <- window(data_list,start=c(1980,1), end=c(2008,1), frequency=4)
+    #lvldata <- ts(ardl_data,start=c(1984,1), end=c(2008,1), frequency=4)
+
+    
+  ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
+                          r=(data_list_w[,3]), fii = data_list_w[,4])
+###
+  
+#1/2 ALTERN.
+  #cdat<-ts(c5dat,start=c(1952,3), end=c(2016,4), frequency=4)
+  #OLD: cdat<-ts(ardl_data,start=c(1952,3), end=c(2016,4), frequency=4)
+=======
 #ALT1: c5dat <- data.frame(inv = (ecmeq[,1]), u = ecmeq[,2],
 #r=(ecmeq[,3]), fi = (ecmeq[,4]), d = ecmeq[,5])
 #ALT2:ardl_data <- data.frame(inv = (data_list[,1]), u = data_list[,2],
@@ -769,6 +814,7 @@ ardl_data <- data.frame(gtot = (data_list_w[,1]), u = data_list_w[,2],
 #1/2 ALTERN.
 #cdat<-ts(c5dat,start=c(1952,3), end=c(2016,4), frequency=4)
 #OLD: cdat<-ts(ardl_data,start=c(1952,3), end=c(2016,4), frequency=4)
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 
 
 
@@ -810,6 +856,15 @@ Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=8,
                                  xmax=c(5,8,8),case=5,verbose = T,ic = "aic")
 #BEST for Fii is ARDL(3,2,1,0) case 5
 
+  
+#3rd. ALTERN. : Fii =Fin. + goodwill(unidentified)
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=lvldata, ymax=2,
+                                 xmax=c(4,4,4),case=1,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=lvldata, ymax=4,
+                                 xmax=c(4,4,4),case=3,verbose = T,ic = "aic")
+  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=8,
+                                 xmax=c(8,4,4),case=5,verbose = T,ic = "aic")
+  #BEST for Fii is ARDL(3,2,1,0) case 5
   
   
   
@@ -883,6 +938,38 @@ c5select5 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=lvldata, ymax=4,
 ##First Most significative Model 
 retards<-c(1,1,0,1) ###
 ##Second Most significative Model 
+<<<<<<< HEAD
+  retards<-c(1,1,0,0) #
+  
+  # INTANGIBLES NO DEBT
+      ##Best Intangible No Debt
+      retards<-c(3,1,3,3,1)
+      ##Best Intangible ++ Debt
+      retards<-c(1,1,0,0,1,1) 
+      
+      ##Best FinInvRatio ++ Intangible No Debt
+      retards<-c(3,1,3,0,3) #Case 5
+        #2nd Best
+        retards<-c(1,1,1,1,1) #Case 3
+  
+      ##Best FinInvRatio ++ Intangible ++ Debt
+      retards<-c(3,1,0,0,0,1) 
+
+      ##Best FinInv/TotAsset ++ Intangible No Debt
+      retards<-c(1,1,1,0,1) #Case 5
+      #2nd Best
+      retards<-c(1,1,1,1,1) #Case 3
+      
+      ##Best FinInv/TotAsset ++ Intangible ++ Debt
+      retards<-c(1,1,0,0,1,1) 
+      
+      ##Best FinInvHistRatio ++ Intangible ++ Debt
+      retards<-c(3,1,0,0,0,1) 
+      
+      ##Best Fii (no Debt
+      retards<-c(3,2,1,3) 
+      
+=======
 retards<-c(1,1,0,0) #
 
 # INTANGIBLES NO DEBT
@@ -913,6 +1000,7 @@ retards<-c(3,1,0,0,0,1)
 ##Best Fii (no Debt
 retards<-c(3,2,1,3) 
 
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 cas<- c(1,3,3,5,5)
 
 # 1st. Alternative : i~u.r.fi+ii  -->Case=5
@@ -927,10 +1015,17 @@ summary(mod)
 ardl::bounds.test(mod)
 ardl::coint(mod)
 
+<<<<<<< HEAD
+plot(mod)
+
+Box.test(mod$residuals,lag = 5, type="Ljung-Box",fitdf=sum(retards))
+car::ncvTest(mod)
+=======
 plot(Mod_sos)
 
 Box.test(Mod_sos$residuals,lag = 5, type="Ljung-Box",fitdf=sum(2))
 car::ncvTest(Mod_sos)
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 
 qqnorm(Mod_sos$residuals)
 qqline(Mod_sos$residuals)  
@@ -989,6 +1084,45 @@ coint(Mod_ii_c5)
     Box.test(Mod_sos$residuals,lag = 9, type="Ljung-Box",fitdf=4)
       #Ho:INDEPENDANT 
     
+<<<<<<< HEAD
+    #Case 3
+      Mod_ii_c3<-ardl::ardl(inv ~ -1+u+r+fi+ii, data=lvldata, ylag=3,
+                            xlag=c(1,3,3,1), case = 3)
+      summary(Mod_ii_c3)
+      bounds.test(Mod_ii_c3)
+      coint(Mod_ii_c3)
+      
+    #Fii INTANGIBLES = Fi+ii
+      #--> Best Model Selected previously: (3.2.1.3)
+      #Case 5
+      Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=1,
+                            xlag=c(1,0,0), case = 5)
+      summary(Mod_ii_c5)
+      bounds.test(Mod_ii_c5)
+      coint(Mod_ii_c5)
+      
+  #NO Intangibles    
+              #1952-2016#
+              cmacroa<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=2,
+                                  xlag=c(8,3,1), case=5)
+              #1952-2007#
+              cmacrob<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=4,
+                                  xlag=c(1,3,0))
+              #1952-1985#
+              cmacroc<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=14,
+                                  xlag=c(1,3,0))
+              #1987-2016#
+              cmacrod<-ardl::ardl(inv~u+r+fi, data=lvldata, ylag=4,
+                                  xlag=c(1,1,1))
+              
+              ### test for alternative specification ARDL(1,1,0,1) :
+              ArdlRatioAlt1.0<-ardl::ardl(inv ~ -1+u+r+fi, data=lvldata, ylag=1,
+                                          xlag=c(1,0,1), case = 3)
+              #IN FINE: when restricting the period for 1984-2008
+              # (to account for identified structural breaks)
+              # ARDL (Inv,u,r,FinIn) prooves LRR at 5%
+              # FinInv has SIGNIFICANT negative LR impact on Accum?
+=======
     shapiro.test(Mod_sos$residuals) #Royston (1995) to be adequate for p.value < 0.1.
       #Ho:nORMALITY
     
@@ -1027,6 +1161,7 @@ ArdlRatioAlt1.0<-ardl::ardl(inv ~ -1+u+r+fi, data=lvldata, ylag=1,
 # (to account for identified structural breaks)
 # ARDL (Inv,u,r,FinIn) prooves LRR at 5%
 # FinInv has SIGNIFICANT negative LR impact on Accum?
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 
 # Est° 2 ---++ DEBT -----------------------------------------------------------
 # 2nd. Alternative : i~u.r.fi.ii+DEBT

@@ -457,6 +457,37 @@ library(strucchange)
         lines(ts(fitted(fmg0), start=c(1800)), col = 3)
         lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
         lines(bp.gpercap)
+<<<<<<< HEAD
+      # 
+
+    ## Rgdp Growth RATE ##
+    #gdpCAP
+    fs.g_rate <- Fstats(G_RATE ~ 1)
+    plot(fs.g_rate)
+    breakpoints(fs.g_rate)
+    plot(G_RATE)
+    lines(breakpoints(fs.g_rate))
+    ##Modulating the number of BP...
+    bp.g_rate <- breakpoints(G_RATE ~ 1,breaks = 5)
+    summary(bp.g_rate)
+    fmg0 <- lm(G_RATE ~ 1)
+    fmgf <- lm(G_RATE ~ breakfactor(bp.g_rate))#,breaks = 1))
+    plot(G_RATE)
+    lines(ts(fitted(fmg0), start=c(1800)), col = 3)
+    lines(ts(fitted(fmgf), start = c(1800,1), frequency = 1), col = 4)
+    lines(bp.g_rate)
+    # 
+
+# SVAR --------------------------------------------------------------------
+
+
+##LOG-rgdp
+  myvar <- data.frame(growth=LogRgdp, debt=dnw)
+##LEVEL-rgdp
+  myvar <- data.frame(growth=window(gdpts,start=c(1951,4),end=c(2016,3)), debt=dnw)        
+library(urca)
+library(vars)
+=======
         
                 #LOGgdpCAP
                   fs.lgpercap <- Fstats(log(gdpCAP) ~ 1)
@@ -493,6 +524,7 @@ library(strucchange)
   
   var_data <- data.frame(gdp = (var_list[,1]), d=(var_list[,2]))
   
+>>>>>>> 73536efe42245415bd30f0ec0f0928683b3594e6
 # --------------------------------------------------------------------------- #
 # ---------------------------- Reduced Form VAR ----------------------------- #
 
