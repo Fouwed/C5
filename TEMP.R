@@ -132,7 +132,7 @@ ecm.model <- dg ~ cir + dd
   ## DEBT ##
   # EFP process
   #type= MOSUM
-  efpMo_d <- efp(diff(dnwH) ~ 1, type = "Rec-MOSUM",h=0.145)#1980's break whithin 0.05-->0.07
+  efpMo_d <- efp(diff(dnwH) ~ 1, type = "Rec-MOSUM",h=0.125)#1980's break whithin 0.05-->0.07
   # 0.053 --> 3 years
   plot(efpMo_d)
   abline(v=1999.5, col="grey50")
@@ -140,7 +140,7 @@ ecm.model <- dg ~ cir + dd
   ###RESULTS: BREAK in 1985 then 1999 for dnwH   #
   
   #type= ME
-  efpCu_d <- efp(diff(dnwH) ~ 1, type = "ME")
+  efpCu_d <- efp(diff(dnwH) ~ 1, type = "ME",h=0.13)
   # 0.053 --> 3 years
   plot(efpCu_d)
   abline(v=1999.5, col="grey50")
@@ -180,7 +180,7 @@ ecm.model <- dg ~ cir + dd
   sctest(fs.debt2)
   
   # ZIVOT & ANDREWS test
-  #RGDP - Level
+  #dnwHIST
   za.dnwH <- ur.za(dnwH, lag= 9, model = "intercept")
   summary(za.dnwH)
   plot(za.dnwH)
@@ -195,17 +195,17 @@ ecm.model <- dg ~ cir + dd
   plot(za.dnwH)
   
   
-  #LOG-RGDP
-  za.dnwH <- ur.za((dnwH), lag= 9, model = "intercept")
+  #dnw (Market value)
+  za.dnwH <- ur.za((dnw), lag= 9, model = "intercept")
   summary(za.dnwH)
   plot(za.dnwH)
   
-  za.dnwH <- ur.za((dnwH), lag= 11, model = "trend")
+  za.dnwH <- ur.za((dnw), lag= 11, model = "trend")
   summary(za.dnwH)
   plot(za.dnwH)
   # result: non-signif BP in 1998:50
   
-  za.dnwH <- ur.za((dnwH), lag= 9, model = "both")
+  za.dnwH <- ur.za((dnw), lag= 9, model = "both")
   summary(za.dnwH)
   plot(za.dnwH)
   
@@ -231,7 +231,7 @@ ecm.model <- dg ~ cir + dd
   
   #EFP
   ocus <- efp(ecm.model, type = "OLS-CUSUM", data = ci_dat)
-  me <- efp(ecm.model, type = "ME", data = ci_dat, h = 0.2)
+  me <- efp(ecm.model, type = "ME", data = ci_dat, h = 0.5)
   
   bound.ocus <- boundary(ocus, alpha = 0.01)
   plot(ocus, boundary = FALSE)

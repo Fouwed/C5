@@ -247,6 +247,31 @@ jojodumTrace<-ca.jo(cbind(LogRgdp,dbteq),ecdet="trend",
 summary(jojodumTrace)
 
 
+##COINT btw GrowthRate & dbtnwHIST 
+    # 1951->2016  
+    G_RATE<- window(G_RATE, start = c(1951,4),end = c(2016,3),frequency = 4)
+    dbtnwH<- window(dbtnwH, start = c(1951,4),end = c(2016,3),frequency = 4)
+    #MAX
+    jojolevel<-ca.jo(cbind(G_RATE,dbtnwH),ecdet="trend",type="eigen",K=2)
+    summary(jojolevel)
+    #Lags=3
+    jojolevel<-ca.jo(cbind(G_RATE,dbtnwH),ecdet="trend",type="eigen",K=3)
+    summary(jojolevel)
+    # cointeg
+    
+    #TRACE
+    jojolevTrace<-ca.jo(cbind(G_RATE,dbtnwH),ecdet="trend",type="trace",K=2)
+    summary(jojolevTrace)
+    #Lags=3
+    jojolevTrace<-ca.jo(cbind(G_RATE,dbtnwH),ecdet="trend",type="trace",K=3)
+    summary(jojolevTrace)
+    ## RESULTS: Cointegration
+
+
+
+
+
+
 #Test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )
 #LEVEL
 jojoStruct <- cajolst(cbind(LogRgdp,dbteq))
