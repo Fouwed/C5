@@ -803,6 +803,12 @@ ur.ers(dnw)
 ur.ers(gd,model="trend")
 ur.ers(dnwd,model="trend")
 
+#DUMMY
+d_1<- c(rep(0,107),rep(1,122)) #corresponding to 1984:50
+d_post<- ts(d_1, start = c(1958,1),frequency = 4)
+VARselect(vecm_data6,lag.max = 8, type = "both", exogen =d_post)
+p1<-VAR(vecm_data6, p=5, type = "both", exogen =d_post)
+vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=7, dumvar = d_post)
 
 
 VARselect(vecm_data6,lag.max = 8, type = "both")
@@ -826,6 +832,10 @@ plot(stability(p2),nc=2)
 plot(stability(p7),nc=2)
 vecm_data6 <- vecm_data6[ , c("d","gdp","fii","inv")]
 vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=5) #Alternative specif° #1 pass 1 coint. relat° at 5%
+
+#DUMMY
+  vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=7, dumvar = d_post)
+  
 summary(vecm6)
 vecm6.r1<-cajorls(vecm6,r=1)
 alpha6<-coef(vecm6.r1$rlm)[1,]
@@ -842,7 +852,7 @@ alpha6
 alpha6.t
 beta6
 beta6.t
-svecm6<-SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)
+svecm6<-SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=F,boot = F,runs = 100)
 svecm6
 svecm6$SR / svecm6$SRse
 svecm6$LR
