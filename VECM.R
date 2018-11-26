@@ -850,7 +850,7 @@ plot(stability(p1),nc=2)
 plot(stability(p2),nc=2)
 plot(stability(p7),nc=2)
 vecm_data6 <- vecm_data6[ , c("d","gdp","fii","inv")]
-vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=5) #Alternative specif° #1 pass 1 coint. relat° at 5%
+vecm6 <- ca.jo(vecm_data6,ecdet="trend",K=4) #Alternative specif° #1 pass 1 coint. relat° at 5%
 summary(vecm6)
 vecm6.r1<-cajorls(vecm6,r=1)
 alpha6<-coef(vecm6.r1$rlm)[1,]
@@ -1052,6 +1052,112 @@ fevd.d
 
 
 
+# SVECM FINAL -------------------------------------------------------------
+
+data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), 
+                           (dbtot/log(AssetTot)),log(ProInv)) 
+data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), 
+      log(dbtot),log(ProInv)) 
+data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), 
+          dbteq,log(ProInv)) 
+data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), 
+          dbtnw,log(ProInv)) 
+data_vecm6 <- ts.intersect(LogRgdp,log(FinInv+IntInv), 
+          dbtnwH,log(ProInv)) 
+
+data_list_w <- window(data_vecm6,start=c(1963,1), end=c(2015,1), frequency=4)
+  data_list_w <- window(data_vecm6,start=c(1980,1), end=c(2015,1), frequency=4)
+
+vecm_data6 <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
+                         d=(data_list_w[,3]), inv = data_list_w[,4])
+
+plot(data_list_w, nc=2)
+
+
+
+VARselect(vecm_data6,lag.max = 8, type = "both")
+VARselect(vecm_data6,lag.max = 8, type = "n")
+VARselect(vecm_data6,lag.max = 8, type = "c")
+VARselect(vecm_data6,lag.max = 8, type = "trend")
+
+    # VAR estimat° (p=1, 2 & 7)
+    p1<-VAR(vecm_data, p=2, type = "both")
+    p2<-VAR(vecm_data, p=3, type = "both")
+    p7<-VAR(vecm_data, p=6, type = "both")
+    # VAR diagnostic tests
+    #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
+    serial.test(p1,lags.pt = 16,type = "PT.asymptotic")
+    serial.test(p1,lags.pt = 16,type = "PT.adjusted")
+    
+    serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
+    serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+    
+    serial.test(p7,lags.pt = 16,type = "PT.asymptotic")
+    serial.test(p7,lags.pt = 16,type = "PT.adjusted")
+    
+    #JB: Jarque-Bera tests and multivariate skewness 
+    # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
+    normality.test(p1)
+    # Non-norm.
+    normality.test(p2)
+    # Non-norm.
+    normality.test(p7)
+    # Non-norm.
+    
+    #ARCH: 
+    arch.test(p1,lags.multi = 5)
+    #Heteroscedastic resid.
+    arch.test(p2,lags.multi = 5)
+    #Heteroscedastic resid.
+    arch.test(p7,lags.multi = 5)
+    #Heteroscedastic resid.
+
+#reorder data set for debt priority
+vecm_data6 <- vecm_data6[ , c("d","gdp","fii","inv")]
+
+    
+    
+vecm6 <- ca.jo(vecm_data6,ecdet="t",K=3)
+  summary(vecm6)
+vecm6 <- ca.jo(vecm_data6,ecdet="c",K=3)
+  summary(vecm6)
+vecm6 <- ca.jo(vecm_data6,ecdet="n",K=4)
+summary(vecm6)
+
+    SR<-matrix(NA,nrow = 4,ncol = 4)
+    LR<-matrix(NA,nrow = 4,ncol = 4)
+    LR[1:4,1]<-0
+    SR[3,2]<-0
+    SR[3,4]<-0
+    LR[3,4]<-0
+    LR
+    SR
+
+svecm6<-SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)
+    svecm6
+    svecm6$SR / svecm6$SRse
+    svecm6$LR
+    svecm6$LR / svecm6$LRse
+svecm6.irf<-irf(svecm6)
+plot(svecm6.irf)
+    svecm6.irf<-irf(svecm6, n.ahead = 16)
+    plot(svecm6.irf)
+    svecm6.irf<-irf(svecm6, n.ahead = 40)
+    plot(svecm6.irf)
+
+#DUMMY
+#DEBTOT
+d_1<- c(rep(0,87),rep(1,122)) #corresponding to 1984:50
+d_post<- ts(d_1, start = c(1958,1),frequency = 4)
+#DEBTEQ
+d_1<- c(rep(0,105),rep(1,124)) #corresponding to 1984:50
+d_post<- ts(d_1, start = c(1963,1), end=c(2015,1),frequency = 4)
+
+VARselect(vecm_data6,lag.max = 8, type = "both", exogen =d_post)
+p1<-VAR(vecm_data6, p=2, type = "c", exogen =d_post)
+
+vecm6 <- ca.jo(vecm_data6,ecdet="c",K=2, dumvar = d_post)
+summary(vecm6)
 
 # Fine TUNING -------------------------------------------------------------
 

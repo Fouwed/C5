@@ -1118,9 +1118,9 @@ VARselect(vecm_data6,lag.max = 8, type = "trend")
     arch.test(p1,lags.multi = 5)
     #Heteroscedastic resid.
     arch.test(p2,lags.multi = 5)
-    #Heteroscedastic resid.
+    #NON Heteroscedastic resid.
     arch.test(p7,lags.multi = 5)
-    #Heteroscedastic resid.
+    #NON Heteroscedastic resid.
 
 #reorder data set for debt priority
   # 1-growth causes debt

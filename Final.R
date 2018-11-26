@@ -15,7 +15,7 @@ library(urca)
 library(vars)
 library(strucchange)
 
-# Read data
+#Read data
   RealGrowth <- read.csv("Z1_RGDP_3Dec_GDPC96.csv", head = TRUE, sep=",")
   DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
                        head = TRUE, sep=",")
@@ -35,7 +35,48 @@ library(strucchange)
   #AGGREGATE Quaterly to YEARLY Rgdp
   Ygdp <- aggregate(gdpts,nfrequency = 1, FUN = sum)
   Ygdp_RATE <- ((diff(Ygdp, lag=1, differences = 1)/lag(Ygdp,-1)))
+  invraw5 <- read.csv("INV5_RealGrossPrivateDomesticInvestment.csv",head = TRUE, sep=",")
+  #All FinAsset (including UNIDENTIFIED)
+  fininvraw <- read.csv("FinInv.csv", skip = 1,head = TRUE, sep=",")
+  #ONLY Identified Financial assets
+  finInvIndeed <- read.csv("PURGED_FININV.csv", skip = 2,head = TRUE, sep=",")
+  #UnIdentified Financial assets
+  intanginv <- read.csv("IntangibleInv.csv", skip = 1,head = TRUE, sep=",")
+  prodinvraw <- read.csv("FinInv2.csv", skip = 1,head = TRUE, sep=",")
+  
+  
+  DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
+                       head = TRUE, sep=",")
+  DebtToEq <- read.csv("Z1_NFCBusiness_CreditMarketDebtAsPercentageOfMarketValueOfCorpEquities.csv",
+                       head = TRUE, sep=",")
+  DebtTot <- read.csv("NFCDEBT.csv",
+                      head = TRUE, sep=",")
+  
+inv5 <- ts(invraw5$GPDIC1, start = c(1947,1),end = c(2016,4),frequency = 4)
+TotFinInv <- ts(fininvraw$fininv, start = c(1951,4),end = c(2016,4),frequency = 4)
+#2nd. is financialy "pure" Fin Assets
+FinInv <- ts(finInvIndeed$FININDEED, start = c(1951,4),
+             end = c(2015,1),frequency = 4)
 
+#INTANGIBLE INVESTMENT SERIES
+IntInv <- ts(intanginv$intinv, start = c(1951,4),
+             end = c(2015,1),frequency = 4)
+
+#PRODUCTIVE INVESTMENT SERIES
+ProInv <- ts(prodinvraw$physasset, start = c(1951,4),end = c(2016,4),frequency = 4)
+
+
+FinInvHistRatio <- ts(fininvraw$hfininvratio, start = c(1951,4),end = c(2016,4),frequency = 4)
+FinInvRatio <- ts(fininvraw$fininvratio, start = c(1951,4),frequency = 4)
+AssetTot <- ts(fininvraw$totinv, start = c(1951,4),frequency = 4)
+
+dbtnw <- ts(DebtToNw$NCBCMDPNWMV, start = c(1951,4),end = c(2016,4),frequency = 4)
+dbteq <- ts(DebtToEq$NCBCMDPMVCE, start = c(1951,4),frequency = 4)
+dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
+#
+
+
+  
 #adapt variables' names
   Prod_Inv <- inv5
   Intang_Inv <- (FinInv+IntInv)
@@ -99,7 +140,7 @@ library(strucchange)
     pp.test(diff(vecm_data6[,"inv"], differences = 2), type = "Z(t_alpha)")
     ur.ers(diff(vecm_data6[,"inv"]), model="trend") #TREND
     
-#COINTEGRATION
+##COINTEGRATION ####
   #LAG ORDER SELECTION
     VARselect(vecm_data6,lag.max = 8, type = "both")
     VARselect(vecm_data6,lag.max = 8, type = "c")
@@ -140,25 +181,121 @@ library(strucchange)
     #JOHANSEN TEST : CHOOSE THE K=7 BECAUSE OF STABILITY (see previous graphs)
       vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7)
         summary(vecm6)
-      #DUMMY IN 1982  OR 1974???
-        vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7, dumvar = d_post)
-          summary(vecm6)  
-        vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7, dumvar = d_post)
-          summary(vecm6)  
-      #dummy bring proof of cointegration
-          
-#THUS, I'LL USE 1980-2015 PERIOD      
+        #REJECT COINTEGRATION AT 5%
       
+      #DUMMY IN 1985
+      dd_1<- c(rep(0,132),rep(1,121)) #corresponding to 1985:Q1
+      d_post<- ts(d_1, start = c(1952,1),frequency = 4)
+                  #DUMMY IN 1980
+                    d_1<- c(rep(0,112),rep(1,141)) #corresponding to 1980:Q1
+                    d_post<- ts(d_1, start = c(1952,1),frequency = 4)
+                  #DUMMY1982
+                    d_1<- c(rep(0,120),rep(1,133)) #corresponding to 1982:Q1
+                    d_post<- ts(d_1, start = c(1952,1),frequency = 4)
+                  #DUMMY1984
+                    d_1<- c(rep(0,128),rep(1,125)) #corresponding to 1984:Q1
+                    d_post<- ts(d_1, start = c(1952,1),frequency = 4)
         
-                    #Test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )    
-                        jojoStruct <- cajolst(vecm_data6)
-                        summary(jojoStruct)
-                        slot(jojoStruct, "bp")
-                        slot(jojoStruct, "x")
-                        slot(jojoStruct, "x")[126] # corrsponding to 1983
-                        ## RESULTS: NO Cointegration once break accounted for (1983,1)
-                        #         i.e there maybe coint just becausz of struct shift
+        vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7, dumvar = d_post)
+          summary(vecm6)  
+        vecm6 <- ca.jo(vecm_data6,ecdet="t",K=3, dumvar = d_post)
+          summary(vecm6)  
+      #dummy bring proof of cointegration 1%
+          
+#THUS, I'LL USE 1985-2015 PERIOD      
+  data_list_w <- window(data_vecm6,start=c(1985,1), end=c(2015,1), frequency=4)
+  vecm_data6 <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
+                           d=(data_list_w[,3]), inv = data_list_w[,4])
+  plot(data_list_w, nc=2)     
   
+  #LAG ORDER SELECTION
+    VARselect(vecm_data6,lag.max = 8, type = "both")
+    VARselect(vecm_data6,lag.max = 8, type = "c")
+    VARselect(vecm_data6,lag.max = 8, type = "trend")
+  
+  #FIRST, MAKE SURE THAT 2007 CRISIS DIDN'T INDUCE BREAK IN 1980-2015 PERIOD
+      #test for mistaking shift in data for cointegration
+      #Test for "wrongly accept COINT" for struct. Break (Pfaff §8.2 AND Lütkepohl, H., Saikkonen, P. and Trenkler, C. (2004), )    
+                        jojoStruct <- cajolst(vecm_data6, K=3)
+                        summary(jojoStruct)
+                         slot(jojoStruct, "bp")
+                        slot(jojoStruct, "x")
+                        slot(jojoStruct, "x")[88] # corrsponding to 2007:Q1
+                        ## RESULTS: aDJUSTED VARIABLES CONFFIRM Coint. at 1% 85-2015
+                        #         
+#VAR estimat° (p=1, 2 & 7)
+  p1<-VAR(vecm_data6, p=2, type = "both")
+  p2<-VAR(vecm_data6, p=3, type = "both")
+  p7<-VAR(vecm_data6, p=5, type = "both")
+# VAR diagnostic tests
+  #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
+  serial.test(p1,lags.pt = 16,type = "PT.asymptotic")
+  serial.test(p1,lags.pt = 16,type = "PT.adjusted")
+  
+  serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
+  serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+  
+  serial.test(p7,lags.pt = 16,type = "PT.asymptotic")
+  serial.test(p7,lags.pt = 16,type = "PT.adjusted")
+  
+#JB: Jarque-Bera tests and multivariate skewness 
+  # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
+  normality.test(p1)
+  # Non-norm.
+  normality.test(p2)
+  # Non-norm.
+  normality.test(p7)
+  # Non-norm.
+  
+#ARCH: 
+  arch.test(p1,lags.multi = 5)
+  #Heteroscedastic resid.
+  arch.test(p2,lags.multi = 5)
+  #NON Heteroscedastic resid.
+  arch.test(p7,lags.multi = 5)
+  #NON Heteroscedastic resid.
+#RESULTS: LAG=5 beacause of wellbehaved character
+
+#reorder data set for debt priority
+  # 1-growth causes debt
+    vecm_data6 <- vecm_data6[ , c("d","gdp","fii","inv")]
+  # 2-demand/supply seting relation (D=debt ; S=TotInv)  
+    vecm_data6 <- vecm_data6[ , c("gdp","d","fii","inv")]
+  
+vecm6 <- ca.jo(vecm_data6,ecdet="c",K=5)  #if ProIinv: K=(2,c):2coint    if inv5: K=(5,c): 1r
+summary(vecm6)
+  
+# 1 coint relat°
+  SR<-matrix(NA,nrow = 4,ncol = 4)
+  LR<-matrix(NA,nrow = 4,ncol = 4)
+  LR[1:4,1]<-0
+  SR[3,2]<-0
+  SR[3,4]<-0
+  LR[3,4]<-0
+  LR
+  SR
+  
+svecm6<-SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)    
+  
+    svecm6
+    svecm6$SR / svecm6$SRse
+    svecm6$LR
+    svecm6$LR / svecm6$LRse
+svecm6.irf<-irf(svecm6)
+plot(svecm6.irf)
+
+#RESULT:#inv5:
+# K=(5,c) : g affects d (LT) ;   g affects fii (LT) ??   ; g affects inv  ;  fii impact  g  ;fii impact inv  ; 
+
+    svecm6.irf<-irf(svecm6, n.ahead = 16)
+    plot(svecm6.irf)
+    svecm6.irf<-irf(svecm6, n.ahead = 40)
+    plot(svecm6.irf)
+
+fevd.d <- fevd(svecm6, n.ahead = 16)$d
+fevd.d   
+ 
+
 
 
 

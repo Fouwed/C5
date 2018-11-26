@@ -443,6 +443,90 @@ ci_dat <- data.frame(g = (data_coint[,1]), d = data_coint[,2],
       
       
 
+# U.S RATE OF GROWTH- STRUCT BREAK ----------------------------------------
+   #Non-Significant Results
+      
+              #1- StrBrk_1 : EFP
+              # EFP = empirical fluct° process
+              # Ho: no struct. break (Kleiber p.171)
+              
+              ## RATE OF GROWTH ##
+              
+              #DIFF-rgdp - EFP Type= MOsum - ALL DATA RANGE
+              efpMo_rgdp <- efp(G_RATE ~ 1, type = "Rec-MOSUM",h=0.05)
+              # 0.05 --> 21 years trimming
+              plot(efpMo_rgdp)
+              abline(v=1984.86, col="grey40")
+              abline(v=1983.5, col="grey62")
+              ###RESULTS:RGDP BREAK in 1984   ##
+              
+              
+              #2- StrBrk_2 : Fstat
+              
+              ## RATE OF GROWTH ##
+              #G_RATE
+              # F stat
+              fs.growth <- Fstats(G_RATE ~ 1)
+              sctest(fs.growth, type = "supF",asymptotic = T)
+              sctest(fs.growth, type = "aveF",asymptotic = T)
+              sctest(fs.growth, type = "expF")
+              
+              
+              
+              # Fitted models
+              fs.growth <- Fstats(G_RATE ~ 1)
+              plot(fs.growth)
+              breakpoints(fs.growth)
+              bp.growth <- breakpoints(G_RATE ~ 1,breaks = 1)
+              summary(bp.growth)
+              fmg0 <- lm(G_RATE ~ 1)
+              fmgf <- lm(G_RATE ~ breakfactor(bp.growth))
+              plot(G_RATE, ylab="diff.RGDP")
+              lines(ts(fitted(fmg0), start=c(1947.25)), col = 3)
+              lines(ts(fitted(fmgf), start = c(1947.25), frequency = 4), col = 4)
+              lines(bp.growth)
+              ###RESULTS: BREAK in 1982:4 for LogRgdp   #   
+              =======
+                #DIFF-rgdp - Fstat
+                #F-statistics
+                fs.growth <- Fstats(G_RATE ~ 1)
+              sctest(fs.growth, type = "supF",asymptotic = T)
+              btsctest(fs.growth, type = "aveF",asymptotic = T)
+              sctest(fs.growth, type = "expF")
+              
+              #Fitted models
+              fs.growth <- Fstats(G_RATE ~ 1)
+              plot(fs.growth)
+              breakpoints(fs.growth)
+              bp.growth <- breakpoints(G_RATE ~ 1,breaks = 1)
+              summary(bp.growth)
+              fmg0 <- lm(G_RATE ~ 1)
+              fmgf <- lm(G_RATE ~ breakfactor(bp.growth))
+              plot(G_RATE, ylab="diff.RGDP")
+              lines(ts(fitted(fmg0), start=c(1947.25)), col = 3)
+              lines(ts(fitted(fmgf), start = c(1947.25), frequency = 4), col = 4)
+              lines(bp.growth)
+              ###RESULTS: BREAK in 1982:4 for LogRgdp   #   
+              >>>>>>> 080a319056724b50b448253192efe80eb7d4cf34
+              
+              #BIC of many breakpoints
+              bp.growth2 <- breakpoints(G_RATE ~ 1)
+              summary(bp.growth2)
+              x <- c(3141,    3119,    3120,    3126,    3134,    3144)
+              plot(c(0,1,2,3,4,5), x, xlab="Number of break points", ylab="BIC", type="l")
+              points(c(0,1,2,3,4,5), x,type = "p")
+              
+              
+              #Out of conf. interv.
+              # Ho: No Struct. Break
+              sctest(efpMo_rgdp)
+              sctest(fs.growth)
+              
+              
+              
+              
+      
+
 # Reduced-VAR -------------------------------------------------------------
 
 
@@ -552,8 +636,8 @@ plot(svecm.irf)
 # VAR Lag Order
 VARselect(vecm_data,lag.max = 8, type = "both")
 # VAR estimat° (p=1, 2 & 7)
-p1<-VAR(vecm_data, p=1, type = "both")
-p2<-VAR(vecm_data, p=3, type = "both")
+p1<-VAR(vecm_data, p=3, type = "both")
+p2<-VAR(vecm_data, p=4, type = "both")
 p7<-VAR(vecm_data, p=5, type = "both")
 # VAR diagnostic tests
 #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
