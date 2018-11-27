@@ -1225,8 +1225,8 @@ ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
 Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=6,
                                xmax=c(4,4,4),case=5,verbose = T,ic = "aic")
 
-Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=2,
-                            xlag=c(1,0,0), case = 5)
+Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=6,
+                            xlag=c(4,4,1), case = 5)
 
 bounds.test(Mod_ii_c5)
 coint(Mod_ii_c5)
