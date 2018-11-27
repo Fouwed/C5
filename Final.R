@@ -294,7 +294,20 @@ plot(svecm6.irf)
 
 fevd.d <- fevd(svecm6, n.ahead = 16)$d
 fevd.d   
- 
+
+#OVERIDENTIFICATION
+  #g HAS NO LONG-RUN IMPACT ON debt (LR(1,2) = 0)
+    LR[1,2]<-0
+     LR
+     svecm.oi <- SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=TRUE,boot = FALSE,
+                      max.iter = 600)
+     svecm.oi <- update(svecm6,LR=LR,lrtest=TRUE,boot = FALSE,
+                        max.iter = 300)
+     svecm.oi$LRover
+  #THOUGH NON CONVERGENT...
+   #reject the null that g have no LR impact on d
+     
+### E N D  ###
 
 
 
