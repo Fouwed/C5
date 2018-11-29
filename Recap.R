@@ -976,25 +976,34 @@ Mod_sos<-ardl::ardl(inv~u+r|dA , data=ardl_data, ylag=6,
   ts.plot(gamma_ratio)
 #
 # Intangible-Inv ----------------------------------------------------------
->>>>>>> d81352662234f6fff57bd84c3f17cf4918b48a97
 
-data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
-                         (capu1),
-                         ((profit1/(ProInv+IntInv+FinInv))),
-                         dbtot/(ProInv+IntInv+FinInv),
-                         ((FinInv+IntInv)/(ProInv+IntInv+FinInv)),
-                         log(IntInv),
-                         log(FinInv), 
-                         LogRgdp, log(inv5),
-                         log(dbtot),
-                         (dbtnw))
+            #WRONG data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
+              #WRONG                          (capu1),
+              #WRONG ((profit1/(ProInv+IntInv+FinInv))),
+              #WRONG                        dbtot/(ProInv+IntInv+FinInv),
+              #WRONG                        ((FinInv+IntInv)/(ProInv+IntInv+FinInv)),
+              #WRONG                        log(IntInv),
+              #WRONG                        log(FinInv), 
+              #WRONG                          LogRgdp, log(inv5),
+              #WRONG                          log(dbtot),
+              #WRONG                          (dbtnw))
+  
+  data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
+                           (capu1),
+                           ((profit1/(ProInv+IntInv+FinInv))),
+                           dbtot/(ProInv+IntInv+FinInv),
+                           ((FinInv+IntInv)/(ProInv+IntInv+FinInv)),
+                           log(IntInv),
+                           log(FinInv), 
+                           LogRgdp, log(inv5),
+                           log(dbtot),
+                           (dbtnw),
+                           d_ante, d_post)
+  
 
-<<<<<<< HEAD
 data_list_w <- window(data_list,start=c(1984,1), end=c(2015,1), frequency=4)
-=======
-data_list_w <- window(data_list,start=c(1952,1), end=c(2015,1), frequency=4)
->>>>>>> d81352662234f6fff57bd84c3f17cf4918b48a97
 
+            data_list_w <- window(data_list,start=c(1952,1), end=c(2015,1), frequency=4)
 
 ardl_data <- data.frame(gtot = (data_list_w[,1]),
                         u = data_list_w[,2],
@@ -1008,25 +1017,35 @@ ardl_data <- data.frame(gtot = (data_list_w[,1]),
                         lgd = data_list_w[,10],
                         dtonw = data_list_w[,11])
 
-Alt1select1 <- ardl::auto.ardl(ii~u+r+d, data=ardl_data, ymax=18,
-                               xmax=c(8,8,8),case=(1),verbose = T,ic = "aic")
-Mod_sos<-ardl::ardl(ii~u+r+d , data=ardl_data, ylag=1,
-                    xlag=c(0,1,4), case = 1)
+            Alt1select1 <- ardl::auto.ardl(ii~u+r+d, data=ardl_data, ymax=18,
+                                       xmax=c(8,8,8),case=(1),verbose = T,ic = "aic")
+            Mod_sos<-ardl::ardl(ii~u+r+d , data=ardl_data, ylag=1,
+                            xlag=c(0,1,4), case = 1)
+Alt1select1 <- auto.ardl(ii~d, data=ardl_data, ymax=18,
+                                       xmax=c(8,8,8),case=(1),verbose = T,ic = "ll")
+Mod_sos<-ardl(ii~d , data=ardl_data, ylag=5,
+                            xlag=c(5), case = 1)
 
+#test d=inv+ii   (for Minky dynamics)
+  Alt1select1 <- ardl::auto.ardl(d ~ inv + ii , data=ardl_data, ymax=18,
+                                 xmax=c(8,8),case=1,verbose = T,ic = "ll")
+  Mod_sos<-ardl::ardl(d ~ inv + ii , data=ardl_data, ylag=5,
+                      xlag=c(5,5), case = 1)
+  
+#test d=inv+ii+r   (for d=inv-sRE  and  Minky dynamics)
+  Alt1select1 <- ardl::auto.ardl(d ~ inv + ii + r , data=ardl_data, ymax=18,
+                                 xmax=c(8,8,8),case=1,verbose = T,ic = "ll")
+  Mod_sos<-ardl::ardl(d ~ inv + ii + r , data=ardl_data, ylag=5,
+                      xlag=c(5,5,5), case = 1)
 
-<<<<<<< HEAD
-
-ardl::bounds.test(Mod_sos)
-
-ardl::coint(Mod_sos)
-=======
+  
 # Diag --------------------------------------------------------------------
 summary(Mod_sos)
-ardl::bounds.test(Mod_sos)
-ardl::coint(Mod_sos)
+bounds.test(Mod_sos)
+coint(Mod_sos)
 Box.test(Mod_sos$residuals,lag = 9, type="Ljung-Box",fitdf=4) # I.I.D TESTS  #Ho:INDEPENDANT
 shapiro.test(Mod_sos$residuals) #Ho:nORMALITY
 car::ncvTest(Mod_sos) #Ho:constant error variance
->>>>>>> d81352662234f6fff57bd84c3f17cf4918b48a97
+
 
 #

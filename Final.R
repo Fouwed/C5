@@ -53,7 +53,7 @@
   #1DUMMY 1985
     Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum1, data=ardl_data_dum, ymax=20,
                                  xmax=c(10,10,10),case=5,verbose = T,ic = "aic")
-    Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum, data=ardl_data_dum, ylag=20,
+    Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum1, data=ardl_data_dum, ylag=20,
                           xlag=c(4,9,8), case = 5)
   #2 DUMMIES 1985 & 2007
     Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum1+dum2, data=ardl_data_dum, ymax=30,
