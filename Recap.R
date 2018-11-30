@@ -882,10 +882,8 @@ shapiro.test(Mod_sos$residuals) #Royston (1995) to be adequate for p.value < 0.1
 # ardl SERANN -------------------------------------------------------------
 
 Alt1select1 <- ardl::auto.ardl(gtot~u+r+d, data=ardl_data, ymax=18,
-                               xmax=c(8,8,8),case=(1),verbose = T,ic = "aic")
-<<<<<<< HEAD
-=======
-#
+                               xmax=c(8,8,8),case=3,verbose = T,ic = "aic")
+
 
 # Gtot --------------------------------------------------------------------
 
@@ -920,7 +918,7 @@ ardl_data <- data.frame(gtot = (data_list_w[,1]),
 Alt1select1 <- ardl::auto.ardl(gtot~u+r+d|dP, data=ardl_data, ymax=18,
                                xmax=c(8,8,16),case=(3),verbose = T,ic = "aic")
 Mod_sos<-ardl::ardl(gtot~u+r+d|dA , data=ardl_data, ylag=8,
-                    xlag=c(4,8,9), case = 5)
+                    xlag=c(4,8,9), case = 3)
 
 # Ratio gama(ii) calculation
 ratio_memb<- ts.intersect(log(IntInv+FinInv) , log((FinInv+IntInv)/(ProInv+IntInv+FinInv) ) )
@@ -977,18 +975,7 @@ Mod_sos<-ardl::ardl(inv~u+r|dA , data=ardl_data, ylag=6,
 #
 # Intangible-Inv ----------------------------------------------------------
 
-            #WRONG data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
-              #WRONG                          (capu1),
-              #WRONG ((profit1/(ProInv+IntInv+FinInv))),
-              #WRONG                        dbtot/(ProInv+IntInv+FinInv),
-              #WRONG                        ((FinInv+IntInv)/(ProInv+IntInv+FinInv)),
-              #WRONG                        log(IntInv),
-              #WRONG                        log(FinInv), 
-              #WRONG                          LogRgdp, log(inv5),
-              #WRONG                          log(dbtot),
-              #WRONG                          (dbtnw))
-  
-  data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
+                     data_list<- ts.intersect(log(ProInv+IntInv+FinInv), 
                            (capu1),
                            ((profit1/(ProInv+IntInv+FinInv))),
                            dbtot/(ProInv+IntInv+FinInv),
@@ -1001,21 +988,21 @@ Mod_sos<-ardl::ardl(inv~u+r|dA , data=ardl_data, ylag=6,
                            d_ante, d_post)
   
 
-data_list_w <- window(data_list,start=c(1984,1), end=c(2015,1), frequency=4)
-
-            data_list_w <- window(data_list,start=c(1952,1), end=c(2015,1), frequency=4)
-
-ardl_data <- data.frame(gtot = (data_list_w[,1]),
-                        u = data_list_w[,2],
-                        r=(data_list_w[,3]), 
-                        d = data_list_w[,4],
-                        etha = data_list_w[,5],
-                        ii = data_list_w[,6], 
-                        fi = data_list_w[,7],
-                        gdp = data_list_w[,8],
-                        inv = data_list_w[,9],
-                        lgd = data_list_w[,10],
-                        dtonw = data_list_w[,11])
+              data_list_w <- window(data_list,start=c(1984,1), end=c(2015,1), frequency=4)
+              
+                          data_list_w <- window(data_list,start=c(1952,1), end=c(2015,1), frequency=4)
+              
+              ardl_data <- data.frame(gtot = (data_list_w[,1]),
+                                      u = data_list_w[,2],
+                                      r=(data_list_w[,3]), 
+                                      d = data_list_w[,4],
+                                      etha = data_list_w[,5],
+                                      ii = data_list_w[,6], 
+                                      fi = data_list_w[,7],
+                                      gdp = data_list_w[,8],
+                                      inv = data_list_w[,9],
+                                      lgd = data_list_w[,10],
+                                      dtonw = data_list_w[,11])
 
             Alt1select1 <- ardl::auto.ardl(ii~u+r+d, data=ardl_data, ymax=18,
                                        xmax=c(8,8,8),case=(1),verbose = T,ic = "aic")

@@ -21,6 +21,8 @@
   ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
                           r=(data_list_w[,3]), fii = data_list_w[,4])
   
+  plot (data_list_w, nc=2)
+  
   Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=20,
                                  xmax=c(10,10,10),case=5,verbose = T,ic = "aic")
   
@@ -39,47 +41,49 @@
   shapiro.test(Mod_ii_c5$residuals) 
   #Royston (1995) to be adequate for p.value < 0.1.
   
-  #DUMMY
-    dum_2<- c(rep(0,132),rep(1,121))
-            dum_3<- c(rep(0,223),rep(1,30))
-    dum_3<- c(rep(0,223),rep(1,5),rep(0,25) )
-    dum_t <- cbind(dum_2,dum_3)
-    dum_fin<- ts(dum_t, start = c(1952,1),frequency = 4)
-    
-    ardl_data_dum <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
-                          r=(data_list_w[,3]), fii = data_list_w[,4],
-                          dum1= dum_fin[,1], dum2= dum_fin[,2])
-  
-  #1DUMMY 1985
-    Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum1, data=ardl_data_dum, ymax=20,
-                                 xmax=c(10,10,10),case=5,verbose = T,ic = "aic")
-    Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum1, data=ardl_data_dum, ylag=20,
-                          xlag=c(4,9,8), case = 5)
-  #2 DUMMIES 1985 & 2007
-    Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum1+dum2, data=ardl_data_dum, ymax=30,
-                                 xmax=c(12,12,12),case=3,verbose = T,ic = "aic")
-  
-    Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum1+dum2, data=ardl_data_dum, ylag=20,
-                          xlag=c(4,0,9), case = 5)
-    bounds.test(Mod_ii_c5)
-    coint(Mod_ii_c5)
-    
-    Box.test(Mod_ii_c5$residuals,lag = 9, type="Ljung-Box",fitdf=4)
-    car::ncvTest(Mod_ii_c5)
-    shapiro.test(Mod_ii_c5$residuals)
+                    #DUMMY
+                      dum_2<- c(rep(0,132),rep(1,121))
+                              dum_3<- c(rep(0,223),rep(1,30))
+                      dum_3<- c(rep(0,223),rep(1,5),rep(0,25) )
+                      dum_t <- cbind(dum_2,dum_3)
+                      dum_fin<- ts(dum_t, start = c(1952,1),frequency = 4)
+                      
+                      ardl_data_dum <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
+                                            r=(data_list_w[,3]), fii = data_list_w[,4],
+                                            dum1= dum_fin[,1], dum2= dum_fin[,2])
+                    
+                    #1DUMMY 1985
+                      Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum1, data=ardl_data_dum, ymax=20,
+                                                   xmax=c(10,10,10),case=5,verbose = T,ic = "aic")
+                      Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum1, data=ardl_data_dum, ylag=20,
+                                            xlag=c(4,9,8), case = 5)
+                    #2 DUMMIES 1985 & 2007
+                      Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum1+dum2, data=ardl_data_dum, ymax=30,
+                                                   xmax=c(12,12,12),case=3,verbose = T,ic = "aic")
+                    
+                      Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum1+dum2, data=ardl_data_dum, ylag=20,
+                                            xlag=c(4,0,9), case = 5)
+                      bounds.test(Mod_ii_c5)
+                      coint(Mod_ii_c5)
+                      
+                      Box.test(Mod_ii_c5$residuals,lag = 9, type="Ljung-Box",fitdf=4)
+                      car::ncvTest(Mod_ii_c5)
+                      shapiro.test(Mod_ii_c5$residuals)
     
 
 #2nd PERIOD: 1980-2017
-  data_list_w <- window(data_list,start=c(1980,1), end=c(2015,1), frequency=4)
+  data_list<- ts.intersect(log(inv5),
+                             capu1,profit1/(AssetTot),
+                             log(FinInv+IntInv))
+  data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
   
   ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
                           r=(data_list_w[,3]), fii = data_list_w[,4])
   
-  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=20,
-                                 xmax=c(10,10,10),case=3,verbose = T,ic = "r2")
+  plot (data_list_w, nc=2)
   
-  Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=19,
-                        xlag=c(7,9,8), case = 3)
+  Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=13,
+                        +                         xlag=c(6,1,8), case = 1)
   
   bounds.test(Mod_ii_c5)
   coint(Mod_ii_c5)
@@ -87,24 +91,31 @@
   Box.test(Mod_ii_c5$residuals,lag = 9, type="Ljung-Box",fitdf=4)
   car::ncvTest(Mod_ii_c5)
   shapiro.test(Mod_ii_c5$residuals)
- 
-#1DUMMY 2007 
-  dum_4<- c(rep(0,110),rep(1,5),rep(0,26) )
-  dum_fin<- ts(dum_4, start = c(1980,1),frequency = 4)
-  ardl_data_dum <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
-                              r=(data_list_w[,3]), fii = data_list_w[,4],
-                              dum4= dum_4)
 
-  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum4, data=ardl_data_dum, ymax=20,
-                                 xmax=c(10,10,10),case=3,verbose = T,ic = "r2")
-  Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum4, data=ardl_data_dum, ylag=19,
-                        xlag=c(7,9,10), case = 3)
+  
+                #1DUMMY 2007 
+                  dum_4<- c(rep(0,110),rep(1,5),rep(0,26) )
+                  dum_fin<- ts(dum_4, start = c(1980,1),frequency = 4)
+                  ardl_data_dum <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
+                                              r=(data_list_w[,3]), fii = data_list_w[,4],
+                                              dum4= dum_4)
+                
+                  Alt1select1 <- ardl::auto.ardl(inv~u+r+fii|dum4, data=ardl_data_dum, ymax=20,
+                                                 xmax=c(10,10,10),case=3,verbose = T,ic = "r2")
+                  Mod_ii_c5<-ardl::ardl(inv ~ u+r+fii|dum4, data=ardl_data_dum, ylag=19,
+                                        xlag=c(7,9,10), case = 3)
 
 
 #ARDL PInv=FNCT(U.R.FInv.INnv.Dnw) ####
 # this model, in turn, disantangles the determination impact of fininv-intinv-debt
-data_list<- ts.intersect(log(inv5),capu1,log(profit1),
-                         (FinInvHistRatio),log(IntInv),dbtnw)
+
+data_list<- ts.intersect(log(inv5), capu1,profit1/(AssetTot),
+                          FinInvHistRatio,log(IntInv),dbtnw)
+                  
+           #old alt     data_list<- ts.intersect(log(inv5),capu1,log(profit1),
+                    #               (FinInvHistRatio),log(IntInv),dbtnw)
+                    #mod <- ardl( inv~u+r+fi+ii+d, data=ardl_data, ylag=4, 
+                            #xlag=c(4, 0, 4, 4, 1), case=1, quiet=FALSE )
 
 data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
 
@@ -117,8 +128,25 @@ ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
               
 c5select3 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=ardl_data, ymax=4,
                              xmax=c(4,4,4,4,4),case=1,verbose = T, ic="r2")
-
 mod <- ardl( inv~u+r+fi+ii+d, data=ardl_data, ylag=4, xlag=c(4, 0, 4, 4, 1), case=1, quiet=FALSE )
+summary(mod)
+bounds.test(mod)
+coint(mod)
+
+#PROGRESSIVELY INTRODUCING VARIABLES IN REGRESSIONS
+c5select3 <- ardl::auto.ardl(inv~u+r, data=ardl_data, ymax=4,
+                             xmax=c(4,4),case=1,verbose = T, ic="r2")
+mod <- ardl( inv~u+r, data=ardl_data, ylag=2, xlag=c(2, 2), case=1, quiet=FALSE )
+
+c5select3 <- ardl::auto.ardl(inv~u+r+ii, data=ardl_data, ymax=8,
+                             xmax=c(4,4,4),case=1,verbose = T, ic="r2")
+mod <- ardl( inv~u+r+ii, data=ardl_data, ylag=5, xlag=c(4, 1, 0), case=1, quiet=FALSE )
+
+c5select3 <- ardl::auto.ardl(inv~u+r+ii+fi, data=ardl_data, ymax=8,
+                             xmax=c(8,8,8,8),case=1,verbose = T, ic="r2")
+mod <- ardl( inv~u+r+fi+ii, data=ardl_data, ylag=5, xlag=c(4, 0, 0, 4), case=1, quiet=FALSE )
+
+
 summary(mod)
 ardl::bounds.test(mod)
 ardl::coint(mod)
