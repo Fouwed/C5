@@ -467,7 +467,8 @@ svecm6.irf<-irf(svecm6)
 plot(svecm6.irf)
 
 #RESULT:#inv5:
-# K=(5,c) : g affects d (LT) ;   g affects fii (LT) ??   ; g affects inv  ;  fii impact  g  ;fii impact inv  ; 
+# K=(5,c) : g affects d (LT) ;   g affects fii (LT) ??   ;
+          # g affects inv  ;  fii impact  g  ;fii impact inv  ; 
 
     svecm6.irf<-irf(svecm6, n.ahead = 16)
     plot(svecm6.irf)
@@ -489,6 +490,29 @@ fevd.d
   #THOUGH NON CONVERGENT...
    #reject the null that g have no LR impact on d
      
+     
+
+# SR justification : g do not cause ii -------------------------------------
+
+     #myvarLS <- data.frame(growth=window(LogRgdp,start=c(1985,1),end=c(2015,1)),
+      #                     debt=window(dbtnwH,start=c(1985,1),end=c(2015,1)))
+     
+     myvarLS <- data.frame(growth=window(LogRgdp,start=c(1985,1),end=c(2015,1)),
+                           debt=window(diff(FinInv+IntInv),start=c(1985,1),end=c(2015,1)))
+     
+     ## Choose optimal length for unrestricted VAR
+     VARselect(myvar, lag.max = 6, type = "trend")
+     # SC  -->  3lags
+     # AIC & FPE -->  6lags
+     #  HQ -->  5lags
+     
+     varALL <- VAR(myvar, p = 5, type = "both")
+     
+     #1952-->2016
+     print(causality(varALL, cause="growth"))
+     print(causality(varALL, cause="debt"))
+     
+          
 ### E N D  ###
 
 
