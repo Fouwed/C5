@@ -96,6 +96,8 @@
     adf.test(ardl_data[,"u"])  
     kpss.test(ardl_data[,"u"]) #???
         kpss.test(ardl_data[,"u"], null = "T") #???
+          pp.test(diff(ardl_data[,"u"]), type = "Z(t_alpha)")
+          ur.ers(diff(ardl_data[,"u"]), model="trend") #TREND
     adf.test(ardl_data[,"r"])
     kpss.test(ardl_data[,"r"])
     adf.test(ardl_data[,"fii"])
