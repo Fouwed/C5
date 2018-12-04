@@ -72,6 +72,12 @@
     
 
 #2nd PERIOD: 1980-2017
+   
+  # Graphs                                       
+  data_raw<- ts.intersect((inv5),capu1,profit1,(FinInv+IntInv))
+  plot (data_raw, nc=1)
+                                          
+  #DataFrame
   data_list<- ts.intersect(log(inv5),
                              capu1,profit1/(AssetTot),
                              log(FinInv+IntInv))
@@ -82,6 +88,31 @@
   
   plot (data_list_w, nc=2)
   
+  # Stationarity ------------------------------------------------------------
+    #1- ADF:  Ho=non-stat.  H1= diff-stat.
+    #2-KPSS:  Ho=stat.
+    adf.test(ardl_data[,"inv"])
+    kpss.test(ardl_data[,"inv"])
+    adf.test(ardl_data[,"u"])  
+    kpss.test(ardl_data[,"u"]) #???
+        kpss.test(ardl_data[,"u"], null = "T") #???
+    adf.test(ardl_data[,"r"])
+    kpss.test(ardl_data[,"r"])
+    adf.test(ardl_data[,"fii"])
+    kpss.test(ardl_data[,"fii"])
+    
+    adf.test(diff(ardl_data[,"inv"]))
+    kpss.test(diff(ardl_data[,"inv"]))
+    adf.test(diff(ardl_data[,"u"]))
+    kpss.test(diff(ardl_data[,"u"]))
+    adf.test(diff(ardl_data[,"r"]))
+    kpss.test(diff(ardl_data[,"r"]))
+    adf.test(diff(ardl_data[,"fii"]))
+    kpss.test(diff(ardl_data[,"fii"])) #???
+    kpss.test(diff(ardl_data[,"fii"]), null = "T") 
+    
+  
+  #Model
   Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=13,
                         +                         xlag=c(6,1,8), case = 1)
   
