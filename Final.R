@@ -167,44 +167,51 @@ ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
         adf.test(ardl_data[,"inv"])
         kpss.test(ardl_data[,"inv"])
         ur.ers((ardl_data[,"inv"]), model="trend")
-        adf.test(ardl_data[,"u"])  
-        kpss.test(ardl_data[,"u"]) #???
-        #kpss.test(ardl_data[,"u"], null = "T") #???
-        #pp.test((ardl_data[,"u"]), type = "Z(t_alpha)")
-        ur.ers((ardl_data[,"u"]), model="trend") #TREND
+          adf.test(ardl_data[,"u"])  
+          kpss.test(ardl_data[,"u"]) #???
+          #kpss.test(ardl_data[,"u"], null = "T") #???
+          #pp.test((ardl_data[,"u"]), type = "Z(t_alpha)")
+          ur.ers((ardl_data[,"u"]), model="trend") #TREND
         adf.test(ardl_data[,"r"])
         kpss.test(ardl_data[,"r"])
         ur.ers((ardl_data[,"r"]), model="trend")
-        adf.test(ardl_data[,"fii"])
-        kpss.test(ardl_data[,"fii"])
-        ur.ers((ardl_data[,"fii"]), model="trend")
+          adf.test(ardl_data[,"fii"])
+          kpss.test(ardl_data[,"fii"])
+          ur.ers((ardl_data[,"fii"]), model="trend")
         #ALL VARIABLES
         adf.test(ardl_data[,"fi"])
         kpss.test(ardl_data[,"fi"])
         ur.ers((ardl_data[,"fi"]), model="trend")
-        adf.test(ardl_data[,"ii"])
-        kpss.test(ardl_data[,"ii"])
-        ur.ers((ardl_data[,"ii"]), model="trend")
+          adf.test(ardl_data[,"ii"])
+          kpss.test(ardl_data[,"ii"])
+          ur.ers((ardl_data[,"ii"]), model="trend")
         adf.test(ardl_data[,"d"])
         kpss.test(ardl_data[,"d"])
         ur.ers((ardl_data[,"d"]), model="trend")
-        
+          #diff
         adf.test(diff(ardl_data[,"inv"]))
         kpss.test(diff(ardl_data[,"inv"]))
-        adf.test(diff(ardl_data[,"u"]))
-        kpss.test(diff(ardl_data[,"u"]))
+        ur.ers(diff(ardl_data[,"inv"]))
+          adf.test(diff(ardl_data[,"u"]))
+          kpss.test(diff(ardl_data[,"u"]))
+          ur.ers(diff(ardl_data[,"u"]))
         adf.test(diff(ardl_data[,"r"]))
         kpss.test(diff(ardl_data[,"r"]))
-        adf.test(diff(ardl_data[,"fii"]))
-        kpss.test(diff(ardl_data[,"fii"])) #???
-        kpss.test(diff(ardl_data[,"fii"]), null = "T") 
+        ur.ers(diff(ardl_data[,"r"]))
+          adf.test(diff(ardl_data[,"fii"]))
+          #kpss.test(diff(ardl_data[,"fii"])) #???
+          kpss.test(diff(ardl_data[,"fii"]), null = "T")
+          ur.ers(diff(ardl_data[,"fii"]))
         #ALL VARIABLES
         adf.test(diff(ardl_data[,"fi"]))
         kpss.test(diff(ardl_data[,"fi"]))
-        adf.test(diff(ardl_data[,"ii"]))
-        kpss.test(diff(ardl_data[,"ii"]))
+        ur.ers(diff(ardl_data[,"fi"]))
+          adf.test(diff(ardl_data[,"ii"]))
+          kpss.test(diff(ardl_data[,"ii"]))
+          ur.ers(diff(ardl_data[,"ii"]))
         adf.test(diff(ardl_data[,"d"]))
         kpss.test(diff(ardl_data[,"d"]))
+        ur.ers(diff(ardl_data[,"d"]))
 
 
 
