@@ -79,7 +79,7 @@
                                           
   #DataFrame
   data_list<- ts.intersect(log(inv5),
-                             capu1,profit1/(AssetTot),
+                             capu3,profit1/(AssetTot),
                              log(FinInv+IntInv))
   data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
   
@@ -96,8 +96,8 @@
     adf.test(ardl_data[,"u"])  
     kpss.test(ardl_data[,"u"]) #???
         kpss.test(ardl_data[,"u"], null = "T") #???
-          pp.test(diff(ardl_data[,"u"]), type = "Z(t_alpha)")
-          ur.ers(diff(ardl_data[,"u"]), model="trend") #TREND
+          pp.test((ardl_data[,"u"]), type = "Z(t_alpha)")
+          ur.ers((ardl_data[,"u"]), model="trend") #TREND
     adf.test(ardl_data[,"r"])
     kpss.test(ardl_data[,"r"])
     adf.test(ardl_data[,"fii"])
@@ -113,7 +113,10 @@
     kpss.test(diff(ardl_data[,"fii"])) #???
     kpss.test(diff(ardl_data[,"fii"]), null = "T") 
     
-  
+## OUTLIERS
+data_list_w[96:101,2]<-mean(data_list_w[106:108,2])
+##  
+    
   #Model
   Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=13,
                         +                         xlag=c(6,1,8), case = 1)
@@ -157,6 +160,40 @@ plot (data_list_w, nc=2)
 ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
                         r=(data_list_w[,3]), fi = (data_list_w[,4]),
                         ii = data_list_w[,5], d = data_list_w[,6])
+
+
+      #1- ADF:  Ho=non-stat.  H1= diff-stat.
+      #2-KPSS:  Ho=stat.
+        adf.test(ardl_data[,"inv"])
+        kpss.test(ardl_data[,"inv"])
+        adf.test(ardl_data[,"u"])  
+        kpss.test(ardl_data[,"u"]) #???
+        kpss.test(ardl_data[,"u"], null = "T") #???
+        pp.test((ardl_data[,"u"]), type = "Z(t_alpha)")
+        ur.ers((ardl_data[,"u"]), model="trend") #TREND
+        adf.test(ardl_data[,"r"])
+        kpss.test(ardl_data[,"r"])
+        adf.test(ardl_data[,"fii"])
+        kpss.test(ardl_data[,"fii"])
+        adf.test(ardl_data[,"fi"])
+        kpss.test(ardl_data[,"fi"])
+        adf.test(ardl_data[,"ii"])
+        kpss.test(ardl_data[,"ii"])
+        adf.test(ardl_data[,"d"])
+        kpss.test(ardl_data[,"d"])
+        
+        adf.test(diff(ardl_data[,"inv"]))
+        kpss.test(diff(ardl_data[,"inv"]))
+        adf.test(diff(ardl_data[,"u"]))
+        kpss.test(diff(ardl_data[,"u"]))
+        adf.test(diff(ardl_data[,"r"]))
+        kpss.test(diff(ardl_data[,"r"]))
+        adf.test(diff(ardl_data[,"fii"]))
+        kpss.test(diff(ardl_data[,"fii"])) #???
+        kpss.test(diff(ardl_data[,"fii"]), null = "T") 
+
+
+
 
               
 c5select3 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=ardl_data, ymax=4,
