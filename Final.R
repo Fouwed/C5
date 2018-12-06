@@ -29,6 +29,9 @@
   Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=20,
                         xlag=c(0,7,8), case = 5)
   
+  summary(Mod_ii_c5)
+  plot(Mod_ii_c5)
+  
   bounds.test(Mod_ii_c5)
   coint(Mod_ii_c5)
   
@@ -79,7 +82,7 @@
                                           
   #DataFrame
   data_list<- ts.intersect(log(inv5),
-                             capu3,profit1/(AssetTot),
+                             capu1,profit1/(AssetTot),
                              log(FinInv+IntInv))
   data_list_w <- window(data_list,start=c(1985,1), end=c(2015,1), frequency=4)
   
@@ -102,6 +105,7 @@
     kpss.test(ardl_data[,"r"])
     adf.test(ardl_data[,"fii"])
     kpss.test(ardl_data[,"fii"])
+    ur.ers((ardl_data[,"fii"]))
     
     adf.test(diff(ardl_data[,"inv"]))
     kpss.test(diff(ardl_data[,"inv"]))
@@ -110,17 +114,22 @@
     adf.test(diff(ardl_data[,"r"]))
     kpss.test(diff(ardl_data[,"r"]))
     adf.test(diff(ardl_data[,"fii"]))
-    kpss.test(diff(ardl_data[,"fii"])) #???
-    kpss.test(diff(ardl_data[,"fii"]), null = "T") 
+    #kpss.test(diff(ardl_data[,"fii"])) #???
+    kpss.test(diff(ardl_data[,"fii"]), null = "T")
+    ur.ers(diff(ardl_data[,"fii"]))
     
-## OUTLIERS
-data_list_w[96:101,2]<-mean(data_list_w[106:108,2])
-##  
+  ##  
     
   #Model
+  c5select <- ardl::auto.ardl(inv~u+r+fii, data=ardl_data, ymax=16,
+                               xmax=c(8,8,8),case=1,verbose = T, ic="aic")
+    
   Mod_ii_c5<-ardl::ardl(inv ~ -1+u+r+fii, data=ardl_data, ylag=13,
-                        +                         xlag=c(6,1,8), case = 1)
-  
+                               xlag=c(6,1,8), case = 1)
+    # p-value of Lung-Box t-stat Ho: independance of residuals
+      Box.test(Mod_ii_c5$residuals, type="Ljung-Box",lag = 7)
+      Box.test(Mod_ii_c5$residuals,lag = 8, type="Ljung-Box",fitdf=1+1)
+      
   bounds.test(Mod_ii_c5)
   coint(Mod_ii_c5)
   
@@ -162,11 +171,12 @@ ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
                         ii = data_list_w[,5], d = data_list_w[,6])
 
 
-      #1- ADF:  Ho=non-stat.  H1= diff-stat.
+      #1-ADF :  Ho=non-stat.  H1= diff-stat.
       #2-KPSS:  Ho=stat.
+      #3-ERS :  Ho=non-stat.
         adf.test(ardl_data[,"inv"])
         kpss.test(ardl_data[,"inv"])
-        ur.ers((ardl_data[,"inv"]), model="trend")
+        ur.ers((ardl_data[,"inv"]))
           adf.test(ardl_data[,"u"])  
           kpss.test(ardl_data[,"u"]) #???
           #kpss.test(ardl_data[,"u"], null = "T") #???
@@ -174,27 +184,24 @@ ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
           ur.ers((ardl_data[,"u"]), model="trend") #TREND
         adf.test(ardl_data[,"r"])
         kpss.test(ardl_data[,"r"])
-        ur.ers((ardl_data[,"r"]), model="trend")
-          adf.test(ardl_data[,"fii"])
-          kpss.test(ardl_data[,"fii"])
-          ur.ers((ardl_data[,"fii"]), model="trend")
+        ur.ers((ardl_data[,"r"]))
         #ALL VARIABLES
         adf.test(ardl_data[,"fi"])
         kpss.test(ardl_data[,"fi"])
-        ur.ers((ardl_data[,"fi"]), model="trend")
+        ur.ers((ardl_data[,"fi"]))
           adf.test(ardl_data[,"ii"])
           kpss.test(ardl_data[,"ii"])
-          ur.ers((ardl_data[,"ii"]), model="trend")
+          ur.ers((ardl_data[,"ii"]))
         adf.test(ardl_data[,"d"])
         kpss.test(ardl_data[,"d"])
-        ur.ers((ardl_data[,"d"]), model="trend")
+        ur.ers((ardl_data[,"d"]))
           #diff
         adf.test(diff(ardl_data[,"inv"]))
         kpss.test(diff(ardl_data[,"inv"]))
         ur.ers(diff(ardl_data[,"inv"]))
-          adf.test(diff(ardl_data[,"u"]))
-          kpss.test(diff(ardl_data[,"u"]))
-          ur.ers(diff(ardl_data[,"u"]))
+          #adf.test(diff(ardl_data[,"u"]))
+          #kpss.test(diff(ardl_data[,"u"]))
+          #ur.ers(diff(ardl_data[,"u"]))
         adf.test(diff(ardl_data[,"r"]))
         kpss.test(diff(ardl_data[,"r"]))
         ur.ers(diff(ardl_data[,"r"]))
@@ -211,11 +218,9 @@ ardl_data <- data.frame(inv = (data_list_w[,1]), u = data_list_w[,2],
           ur.ers(diff(ardl_data[,"ii"]))
         adf.test(diff(ardl_data[,"d"]))
         kpss.test(diff(ardl_data[,"d"]))
-        ur.ers(diff(ardl_data[,"d"]))
+        ur.ers(diff(ardl_data[,"d"]), model="trend")
 
 
-
-              
 c5select3 <- ardl::auto.ardl(inv~u+r+fi+ii+d, data=ardl_data, ymax=4,
                              xmax=c(4,4,4,4,4),case=1,verbose = T, ic="r2")
 mod <- ardl( inv~u+r+fi+ii+d, data=ardl_data, ylag=4, xlag=c(4, 0, 4, 4, 1), case=1, quiet=FALSE )
