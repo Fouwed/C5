@@ -129,6 +129,7 @@
     # p-value of Lung-Box t-stat Ho: independance of residuals
       Box.test(Mod_ii_c5$residuals, type="Ljung-Box",lag = 7)
       Box.test(Mod_ii_c5$residuals,lag = 8, type="Ljung-Box",fitdf=1+1)
+  summary(Mod_ii_c5)
       
   bounds.test(Mod_ii_c5)
   coint(Mod_ii_c5)
