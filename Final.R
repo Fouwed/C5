@@ -283,8 +283,6 @@ shapiro.test(mod$residuals)
 # SVECM ####
 
 
-setwd("C:/Users/Ferdi/Documents/R/C5")
-setwd("C:/Users/fouwe/Documents/R/C5")
 
 library(tseries)
 library(stats)
@@ -298,7 +296,7 @@ library(strucchange)
   DebtToNw <- read.csv("Z1_NFCBusiness_creditMarket_Debt_asPercentageof_NetWorth.csv",
                        head = TRUE, sep=",")
   RgdpPerCAPITA <- read.csv("RGDPperCAPITA.csv", skip = 4, head = TRUE, sep=",")
-  "Real GDP per capita in 2011US$, multiple benchmarks (Maddison Project Database (2018)) ($)"
+  #"Real GDP per capita in 2011US$, multiple benchmarks (Maddison Project Database (2018)) ($)"
   # Make Time Series of Debt & Gdp objects
   
   gdpts <- ts(RealGrowth$GDPC96, start = c(1947,1),frequency = 4)
@@ -363,10 +361,12 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
   
 #MAKE T.S  
   data_vecm6 <- ts.intersect(log(Rgdp),log(Intang_Inv), log(Debt),log(Prod_Inv))
-  data_list_w <- window(data_vecm6,start=c(1952,1), end=c(2015,1), frequency=4)
+                data_list_w <- window(data_vecm6,start=c(1952,1), end=c(2015,1), frequency=4)
+  data_list_w <- window(data_vecm6,start=c(1985,1), end=c(2015,1), frequency=4)
   vecm_data6 <- data.frame(gdp = (data_list_w[,1]), fii = data_list_w[,2],
                            d=(data_list_w[,3]), inv = data_list_w[,4])
   
+  summary(vecm_data6)
   plot(data_list_w, nc=2)
   d_data_list_w <- diff(data_list_w)
   plot (d_data_list_w, nc=2)
@@ -386,7 +386,7 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
   pp.test(vecm_data6[,"gdp"], type = "Z(t_alpha)")
   ur.ers(vecm_data6[,"gdp"])
     adf.test(diff(vecm_data6[,"gdp"]))
-    kpss.test(diff(vecm_data6[,"gdp"]))
+    kpss.test(diff(vecm_data6[,"gdp"])) # ???????????????????
     pp.test(diff(vecm_data6[,"gdp"]), type = "Z(t_alpha)")
     ur.ers(diff(vecm_data6[,"gdp"]))
   
@@ -395,18 +395,18 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
   pp.test(vecm_data6[,"fii"], type = "Z(t_alpha)")
   ur.ers(vecm_data6[,"fii"])
     adf.test(diff(vecm_data6[,"fii"]))
-    kpss.test(diff(vecm_data6[,"fii"]))
+    kpss.test(diff(vecm_data6[,"fii"]),null ="T")
     pp.test(diff(vecm_data6[,"fii"]), type = "Z(t_alpha)")
     ur.ers(diff(vecm_data6[,"fii"]), model="trend") #TREND
   
-  adf.test(vecm_data6[,"d"])
+  adf.test(vecm_data6[,"d"])# ???????????????????  ,alternative="e"
   kpss.test(vecm_data6[,"d"])
   pp.test(vecm_data6[,"d"], type = "Z(t_alpha)")
   ur.ers(vecm_data6[,"d"])
-    adf.test(diff(vecm_data6[,"d"]))
-    kpss.test(diff(vecm_data6[,"d"])) #?????????????????????????????
+    adf.test(diff(vecm_data6[,"d"]))  #?????????????????????????????
+    kpss.test(diff(vecm_data6[,"d"])) 
     pp.test(diff(vecm_data6[,"d"]), type = "Z(t_alpha)")
-    ur.ers(diff(vecm_data6[,"d"]))
+    ur.ers(diff(vecm_data6[,"d"]), model="trend")   # close to critical -2.89
   
   adf.test(vecm_data6[,"inv"])
   kpss.test(vecm_data6[,"inv"])
@@ -421,12 +421,13 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
 ##COINTEGRATION ####
   #LAG ORDER SELECTION
     VARselect(vecm_data6,lag.max = 8, type = "both")
-    VARselect(vecm_data6,lag.max = 8, type = "c")
+      #VARselect(vecm_data6,lag.max = 8, type = "c")
     VARselect(vecm_data6,lag.max = 8, type = "trend")
     
-  # VAR estimat° (p=1, 2 & 7)
-    p1<-VAR(vecm_data6, p=3, type = "both")
-    p2<-VAR(vecm_data6, p=7, type = "both")
+  # VAR estimat° (p=2, 3 & 5)
+    p1<-VAR(vecm_data6, p=1, type = "both")
+    p2<-VAR(vecm_data6, p=2, type = "both")
+    p3<-VAR(vecm_data6, p=5, type = "both")
 
   # VAR diagnostic tests
     #SERIAL: Portmanteau- and Breusch-Godfrey test for serially correlated errors
@@ -435,6 +436,9 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
       
       serial.test(p2,lags.pt = 16,type = "PT.asymptotic")
       serial.test(p2,lags.pt = 16,type = "PT.adjusted")
+      
+      serial.test(p3,lags.pt = 16,type = "PT.asymptotic")
+      serial.test(p3,lags.pt = 16,type = "PT.adjusted")
 
     #JB: Jarque-Bera tests and multivariate skewness 
     # and kurtosis tests for the residuals of a VAR(p) or of a VECM in levels.
@@ -442,22 +446,26 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
       # Non-norm.
       normality.test(p2)
       # Non-norm.
-    
+      normality.test(p3)
+      
     #ARCH: 
       arch.test(p1,lags.multi = 5)
       #Heteroscedastic resid.
       arch.test(p2,lags.multi = 5)
       #Heteroscedastic resid.
+      arch.test(p3,lags.multi = 5)
     
     #STABILITY
-      plot(stability(p2, type = "Rec-MOSUM"),nc=2)
-      plot(stability(p1, type = "Rec-MOSUM"),nc=2)
-      plot(stability(p2, type = "Rec-CUSUM"),nc=2) #APPENDIX
-      plot(stability(p1, type = "Rec-CUSUM"),nc=2) #APPENDIX
+      plot(stability(p2, type = "OLS-CUSUM"),nc=2)
+      plot(stability(p2, type = "OLS-CUSUM"),nc=2) #APPENDIX
+      plot(stability(p1, type = "OLS-CUSUM"),nc=2)
+      plot(stability(p1, type = "OLS-CUSUM"),nc=2) #APPENDIX
+      plot(stability(p3, type = "OLS-CUSUM"),nc=2)
+      plot(stability(p3, type = "OLS-CUSUM"),nc=2)
 
 
     #JOHANSEN TEST : CHOOSE THE K=7 BECAUSE OF STABILITY (see previous graphs)
-      vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7)
+      vecm6 <- ca.jo(vecm_data6,ecdet="t",K=5)
         summary(vecm6)
         #REJECT COINTEGRATION AT 5%
       
@@ -559,6 +567,21 @@ svecm6<-SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=F,boot = T,runs = 100)
     svecm6$SR / svecm6$SRse
     svecm6$LR
     svecm6$LR / svecm6$LRse
+    
+
+#OVERIDENTIFICATION
+    #g HAS NO LONG-RUN IMPACT ON debt (LR(1,2) = 0)
+    LR[1,2]<-0
+    LR
+    svecm.oi <- SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=TRUE,boot = FALSE,
+                     max.iter = 600)
+    svecm.oi <- update(svecm6,LR=LR,lrtest=TRUE,boot = FALSE,
+                       max.iter = 300)
+    svecm.oi$LRover
+    #THOUGH NON CONVERGENT...
+    #reject the null that g have no LR impact on d
+    
+    
 svecm6.irf<-irf(svecm6)
 plot(svecm6.irf)
 
@@ -574,18 +597,7 @@ plot(svecm6.irf)
 fevd.d <- fevd(svecm6, n.ahead = 16)$d
 fevd.d   
 
-#OVERIDENTIFICATION
-  #g HAS NO LONG-RUN IMPACT ON debt (LR(1,2) = 0)
-    LR[1,2]<-0
-     LR
-     svecm.oi <- SVEC(vecm6,LR=LR,SR=SR,r=1,lrtest=TRUE,boot = FALSE,
-                      max.iter = 600)
-     svecm.oi <- update(svecm6,LR=LR,lrtest=TRUE,boot = FALSE,
-                        max.iter = 300)
-     svecm.oi$LRover
-  #THOUGH NON CONVERGENT...
-   #reject the null that g have no LR impact on d
-     
+
      
 
 # SR justification : g do not cause ii -------------------------------------
