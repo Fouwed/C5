@@ -456,16 +456,19 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
       arch.test(p3,lags.multi = 5)
     
     #STABILITY
-      plot(stability(p2, type = "OLS-CUSUM"),nc=2)
-      plot(stability(p2, type = "OLS-CUSUM"),nc=2) #APPENDIX
       plot(stability(p1, type = "OLS-CUSUM"),nc=2)
       plot(stability(p1, type = "OLS-CUSUM"),nc=2) #APPENDIX
+      plot(stability(p2, type = "OLS-CUSUM"),nc=2)
+      plot(stability(p2, type = "OLS-CUSUM"),nc=2) #APPENDIX
       plot(stability(p3, type = "OLS-CUSUM"),nc=2)
       plot(stability(p3, type = "OLS-CUSUM"),nc=2)
 
 
     #JOHANSEN TEST : CHOOSE THE K=7 BECAUSE OF STABILITY (see previous graphs)
-      vecm6 <- ca.jo(vecm_data6,ecdet="t",K=5)
+      vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7)
+        summary(vecm6)
+        #REJECT COINTEGRATION AT 5%
+      vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7,type = "trace")
         summary(vecm6)
         #REJECT COINTEGRATION AT 5%
       
@@ -481,10 +484,10 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
                   #DUMMY1984
                     d_1<- c(rep(0,128),rep(1,125)) #corresponding to 1984:Q1
                     d_post<- ts(d_1, start = c(1952,1),frequency = 4)
-        
+                  
         vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7, dumvar = d_post)
           summary(vecm6)  
-        vecm6 <- ca.jo(vecm_data6,ecdet="t",K=3, dumvar = d_post)
+        vecm6 <- ca.jo(vecm_data6,ecdet="t",K=7, dumvar = d_post,type = "trace")
           summary(vecm6)  
       #dummy bring proof of cointegration 1%
           
@@ -550,7 +553,28 @@ dbtot <- ts(DebtTot$CRDQUSANABIS, start = c(1952,1),frequency = 4)
   
 vecm6 <- ca.jo(vecm_data6,ecdet="c",K=5)  #if ProIinv: K=(2,c):2coint    if inv5: K=(5,c): 1r
 summary(vecm6)
-  
+  # TRACE
+      vecm6 <- ca.jo(vecm_data6,ecdet="c",K=5, type = "trace")
+      
+##VECM
+      vecm6.r1<-cajorls(vecm6,r=1)
+      alpha6<-coef(vecm6.r1$rlm)[1,]
+      beta6<-vecm6.r1$beta
+      resids6<-resid(vecm6.r1$rlm)
+      N6<-nrow(resids6)
+      sigma <- crossprod(resids6) / N6
+      alpha6.se<-sqrt(solve(crossprod(cbind(vecm6@ZK %*% beta6,
+                                            vecm6@Z1))) [1,1]*diag(sigma))
+      alpha6.t<-alpha6/alpha6.se
+      beta6.se<-sqrt(diag(kronecker(solve(crossprod(vecm6@RK [,-1])),
+                                    solve(t(alpha6) %*% solve(sigma) %*% alpha6))))
+      beta6.t<-c(NA,beta6[-1]/beta6.se)
+      alpha6
+      alpha6.t
+      beta6
+      beta6.t
+      
+      
 # 1 coint relat°
   SR<-matrix(NA,nrow = 4,ncol = 4)
   LR<-matrix(NA,nrow = 4,ncol = 4)
@@ -591,10 +615,10 @@ plot(svecm6.irf)
 
     svecm6.irf<-irf(svecm6, n.ahead = 16)
     plot(svecm6.irf)
-    svecm6.irf<-irf(svecm6, n.ahead = 40)
+    svecm6.irf<-irf(svecm6, n.ahead = 48)
     plot(svecm6.irf)
 
-fevd.d <- fevd(svecm6, n.ahead = 16)$d
+fevd.d <- fevd(svecm6, n.ahead = 48)$d
 fevd.d   
 
 

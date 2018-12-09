@@ -862,6 +862,7 @@ ur.ers(dnwd,model="trend")
         beta6<-vecm6.r1$beta
         resids6<-resid(vecm6.r1$rlm)
         N6<-nrow(resids6)
+        sigma <- crossprod(resids6) / N6
         alpha6.se<-sqrt(solve(crossprod(cbind(vecm6@ZK %*% beta6,
                                               vecm6@Z1))) [1,1]*diag(sigma))
         alpha6.t<-alpha6/alpha6.se
